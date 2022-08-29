@@ -14,6 +14,7 @@
 #' @param desimaalierotin Jos pilkku, muuttaa valmiin taulukon desimaalierottimen pilkuksi, muuten jättää alkuperäisen pisteen.
 #' @param piilota_lataukset_alle Poistaa taulukosta argumentin itseisarvoa pienemmät lataukset.
 #' @return Valmis faktorianalyysitaulukko.
+#' @export
 
 tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalierotin="piste", piilota_lataukset_alle = 0.3) {
   if (class(faktorimalli)[1] != "psych") {stop("Ensimmäisen argumentin tulee olla faktorianalyysin tulosobjekti.")}
@@ -47,6 +48,7 @@ tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalier
 #' @description Funktio tekee korrelaatiomatriisista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
 #' @param korrelaatiomatriisi Korrelaatiomatriisi
 #' @return Valmis korrelaatiotaulukko.
+#' @export
 #'
 tee_korrelaatiotaulukko <- function(korrelaatiomatriisi) {
   if (class(korrelaatiomatriisi)[2] != "corr.test") {stop("Ensimmäisen argumentin tulee olla korrelaatiomatriisi.")}
@@ -68,6 +70,7 @@ tee_korrelaatiotaulukko <- function(korrelaatiomatriisi) {
 #' @description Funktio tekee lineaarisesta regressioanalyysimallista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
 #' @param malli Lineaarinen regressioanalyysimalli.
 #' @return Valmis regressioanalyysitaulukko.
+#' @export
 
 tee_regressiotaulukko<- function(malli) {
   if (class(malli)[1] != "lm") {stop("Ensimmäisen argumentin tulee olla regressioanalyysin tulosobjekti.")}
@@ -89,6 +92,7 @@ tee_regressiotaulukko<- function(malli) {
 #' selitettävä muuttuja rivinä.
 #' @param malli Lineaarinen regressioanalyysimalli.
 #' @return Valmis regressioanalyysitaulukko.
+#' @export
 
 tee_regressiotaulukko_selitettava_rivina <- function(malli) {
   if (class(malli)[1] != "lm") {stop("Ensimmäisen argumentin tulee olla regressioanalyysin tulosobjekti.")}

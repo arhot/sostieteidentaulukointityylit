@@ -11,7 +11,12 @@ Helsingin yliopiston sosiaalitieteiden koulutusohjelmien mukaisia
 tulostaulukoita. Tyyli noudattelee pääpiirteissään APA 7th -ohjeita,
 muutamia suomen kieleen liittyviä poikkeuksia lukuunottamatta.
 
-Versio 0.1, testaillaan.
+Versio 0.1, testaillaan. Tällä hetkellä paketissa on seuraavat funktiot:
+\* tee_faktorianalyysitaulukko() - psych-paketin faktorianalyyseille \*
+tee_korrelaatiotaulukko() - korrelaatiomatriisille \*
+tee_regressiotaulukko() - lm-regressiomalleille \*
+tee_regressiotaulukko_selitettava_rivina() - lm-regressiomalleille (eri
+selitettävien yhdistämiseen samaan taulukkoon)
 
 ## asennus
 
