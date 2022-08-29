@@ -8,11 +8,15 @@
 
 Paketti tekee tavallisimmista tilastoanalyysien tulosobjekteista
 Helsingin yliopiston sosiaalitieteiden koulutusohjelmien mukaisia
-tulostaulukoita.
+tulostaulukoita. Tyyli noudattelee pääpiirteissään APA 7th -ohjeita,
+muutamia suomen kieleen liittyviä poikkeuksia lukuunottamatta.
 
-## Installation
+Versio 0.1, testaillaan.
 
-Asennus:
+## asennus
+
+Asenna suorittamalla seuraavat koodi. Jos et ole asentanut
+devtools-pakettia, asenna se ensin.
 
 ``` r
 # install.packages("devtools")

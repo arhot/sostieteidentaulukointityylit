@@ -17,12 +17,13 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 <!-- badges: end -->
-Paketti tekee tavallisimmista tilastoanalyysien tulosobjekteista Helsingin yliopiston sosiaalitieteiden koulutusohjelmien mukaisia tulostaulukoita. 
+Paketti tekee tavallisimmista tilastoanalyysien tulosobjekteista Helsingin yliopiston sosiaalitieteiden koulutusohjelmien mukaisia tulostaulukoita. Tyyli noudattelee pääpiirteissään APA 7th -ohjeita, muutamia suomen kieleen liittyviä poikkeuksia lukuunottamatta.
 
+Versio 0.1, testaillaan.
 
-## Installation
+## asennus
 
-Asennus: 
+Asenna suorittamalla seuraavat koodi. Jos et ole asentanut devtools-pakettia, asenna se ensin.
 
 ``` r
 # install.packages("devtools")
