@@ -80,7 +80,7 @@ tee_regressiotaulukko<- function(malli) {
                                                       labels=c("***", "**", "*", ""))) %>%
     mutate(Luottamusvali = paste("[", LV_alaraja, ",", LV_ylaraja, "]"), .after=B) %>% select(-LV_alaraja, -LV_ylaraja) %>% filter(Muuttuja!= "(Intercept)")
   selitysosuus <- summary(malli)$adj.r.squared %>% round_half_up(3) %>% as_tibble(rownames="Muuttuja") %>% rename(B=value) %>%
-    mutate(Muuttuja = "R^2^, korjattu")
+    mutate(Muuttuja = "R2, korjattu")
 
   bind_rows(taulukko, selitysosuus)
 }
@@ -104,7 +104,7 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli) {
                                                       labels=c("***", "**", "*", ""))) %>%
     mutate(Luottamusvali = paste("[", LV_alaraja, ",", LV_ylaraja, "]"), .after=B) %>% select(-LV_alaraja, -LV_ylaraja) %>% filter(Muuttuja!= "(Intercept)")
   selitysosuus <- summary(malli)$adj.r.squared %>% round_half_up(3) %>% as_tibble(rownames="Muuttuja") %>% rename(B=value) %>%
-    mutate(Muuttuja = "R^2^, korjattu")
+    mutate(Muuttuja = "R2, korjattu")
 
   bind_rows(taulukko, selitysosuus)
 }
