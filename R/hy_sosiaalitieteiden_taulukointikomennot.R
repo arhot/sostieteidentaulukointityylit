@@ -3,18 +3,20 @@
 #' @import forcats
 #' @import janitor
 #' @import broom
+#' @encoding UTF-8
+
 
 #' @title Faktorianalyysin tulostaulukko
 #'
-#' @description Funktio tekee psych-paketin faktorianalyysimalli HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
+#' @description Funktio tekee psych-paketin faktorianalyysimallista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
 #' @param faktorimalli faktorianalyysimalli
 #' @param kieli Jos suomi, kääntää käsitteet suomeksi, muuten jättää englanninkieliset.
 #' @param desimaalierotin Jos pilkku, muuttaa valmiin taulukon desimaalierottimen pilkuksi, muuten jättää alkuperäisen pisteen.
 #' @param piilota_lataukset_alle Poistaa taulukosta argumentin itseisarvoa pienemmät lataukset.
 #' @return Valmis faktorianalyysitaulukko.
 
-taulukoi_faktorianalyysi <- function(faktorimalli, kieli="suomi", desimaalierotin="piste", piilota_lataukset_alle = 0.3) {
-  if (class(malli1_faktorianalyysi)[1] != "psych") {stop("Ensimmäisen argumentin tulee olla faktorianalyssin tulosobjekti.")}
+tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalierotin="piste", piilota_lataukset_alle = 0.3) {
+  if (class(faktorimalli)[1] != "psych") {stop("Ensimmäisen argumentin tulee olla faktorianalyysin tulosobjekti.")}
 
   taulukko1 <- faktorimalli$loadings  %>% fa.sort() %>% unclass() %>% as_tibble(rownames ="Muuttuja") %>%
     mutate(across(tidyselect::vars_select_helpers$where(is.numeric), ~case_when(abs(.x) < piilota_lataukset_alle  ~ "", TRUE ~ round_half_up(.x, 2) %>%
@@ -39,7 +41,16 @@ taulukoi_faktorianalyysi <- function(faktorimalli, kieli="suomi", desimaalieroti
   valmis_taulukko
 }
 
+
+#' @title Korrelaatiotaulukko
+#'
+#' @description Funktio tekee korrelaatiomatriisista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
+#' @param korrelaatiomatriisi Korrelaatiomatriisi
+#' @return Valmis korrelaatiotaulukko.
+#'
 tee_korrelaatiotaulukko <- function(korrelaatiomatriisi) {
+  if (class(korrelaatiomatriisi)[2] != "corr.test") {stop("Ensimmäisen argumentin tulee olla korrelaatiomatriisi.")}
+
   korrelaatio_arvot <- korrelaatiot$r %>%  as_tibble() %>% mutate_if(is.numeric, round, 2) %>% as.matrix()
   korrelaatioiden_p_arvot <- korrelaatiot$p %>%  as_tibble() %>%  mutate_if(is.numeric,
                                                                             cut, breaks=c(-0.1,0.001,0.01,0.05,1),
@@ -52,7 +63,14 @@ tee_korrelaatiotaulukko <- function(korrelaatiomatriisi) {
   korrelaatiotaulukko
 }
 
+#' @title Regressioanalyysin tulostaulukko
+#'
+#' @description Funktio tekee lineaarisesta regressioanalyysimallista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
+#' @param malli Lineaarinen regressioanalyysimalli.
+#' @return Valmis regressioanalyysitaulukko.
+
 tee_regressiotaulukko<- function(malli) {
+  if (class(malli)[1] != "lm") {stop("Ensimmäisen argumentin tulee olla regressioanalyysin tulosobjekti.")}
   taulukko <- tidy(malli, conf.int=T) %>% tibble::add_column(beta = lm.beta::lm.beta(malli)$standardized.coefficients) %>%
     select(Muuttuja=term, B=estimate, LV_alaraja=conf.low, LV_ylaraja=conf.high, beta, p=p.value)  %>%
     mutate_if(is.numeric, round, 3) %>% mutate(p= cut(p, breaks=c(-0.1,0.001,0.01,0.05,1),
@@ -64,7 +82,16 @@ tee_regressiotaulukko<- function(malli) {
   bind_rows(taulukko, selitysosuus)
 }
 
+
+#' @title Regressioanalyysin tulostaulukko, selitettävä rivinä.
+#'
+#' @description Funktio tekee lineaarisesta regressioanalyysimallista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon, joss
+#' selitettävä muuttuja rivinä.
+#' @param malli Lineaarinen regressioanalyysimalli.
+#' @return Valmis regressioanalyysitaulukko.
+
 tee_regressiotaulukko_selitettava_rivina <- function(malli) {
+  if (class(malli)[1] != "lm") {stop("Ensimmäisen argumentin tulee olla regressioanalyysin tulosobjekti.")}
   selitettava <- all.vars(stats::terms(malli))[1]
   taulukko <- tidy(malli, conf.int=T) %>% tibble::add_column(beta = lm.beta::lm.beta(malli)$standardized.coefficients) %>%
     tibble::add_column(Selitettava = selitettava) %>%
