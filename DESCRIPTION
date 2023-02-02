@@ -10,4 +10,4 @@ Encoding: UTF-8
 LazyData: true
 Imports: 
     dplyr, psych, forcats, janitor, broom, tibble, lm.beta, tidyselect, stats
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
