@@ -65,6 +65,23 @@ tee_korrelaatiotaulukko <- function(korrelaatiomatriisi) {
   korrelaatiotaulukko
 }
 
+tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi, aineisto) {
+  if (class(korrelaatiomatriisi)[2] != "corr.test") {stop("Ensimmäisen argumentin tulee olla korrelaatiomatriisi.")}
+  if (is(aineisto, "data.frame")) {stop("Toisen argumentin tulee olla aineisto.")}
+
+  korrelaatio_arvot <- korrelaatiot$r %>%  as_tibble() %>% mutate_if(is.numeric, round, 2) %>% as.matrix()
+  korrelaatioiden_p_arvot <- korrelaatiot$p %>%  as_tibble() %>%  mutate_if(is.numeric,
+                                                                            cut, breaks=c(-0.1,0.001,0.01,0.05,1),
+                                                                            labels=c("***", "**", "*", "")) %>% as.matrix()
+  korrelaatiotaulukko <- matrix(paste(korrelaatio_arvot,korrelaatioiden_p_arvot, sep=""), dim(korrelaatio_arvot)[1], dim(korrelaatio_arvot)[1])
+  korrelaatiotaulukko[lower.tri(korrelaatiotaulukko,diag=TRUE)] <- NA
+  colnames(korrelaatiotaulukko) <- colnames(korrelaatiot$r)
+  rownames(korrelaatiotaulukko) <- colnames(korrelaatiot$r)
+  korrelaatiotaulukko <- korrelaatiotaulukko[-nrow(korrelaatiotaulukko),-1] %>% as_tibble(rownames = "Muuttuja")
+
+
+}
+
 #' @title Regressioanalyysin tulostaulukko
 #'
 #' @description Funktio tekee lineaarisesta regressioanalyysimallista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
@@ -107,6 +124,48 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli) {
     mutate(Muuttuja = "R2, korjattu")
 
   bind_rows(taulukko, selitysosuus)
+}
+
+#' @title Esitellään jatkuva muuttuja.
+#'
+#' @description Funktio tekee jatkuvasta muuttujasta HY:n sosiaalitieteiden ohjeen mukaisen esittelytaulukon.
+#' @param aineisto Aineistotiedosto.
+#' @return Valmis esittelytaulukko.
+#' @export
+
+tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv=F, vinous=F){
+  taulukko <- aineisto %>%
+    summarise(across(c(!!!quos(...)), list(
+      n = ~sum(!is.na(.x)),
+      ka = ~mean(.x, na.rm=T) %>% round_half_up(3),
+      kh = ~sd(.x, na.rm=T) %>% round_half_up(3)), .names = "{.col}.{.fn}")) %>%
+    tidyr::pivot_longer(cols = contains("."), names_sep = "\\.", names_to  = c("Muuttuja", ".value"))
+  if(lv==T) {
+    taulukko <- taulukko %>% mutate(lv_alaraja = ka-1.96*kh/sqrt(n),
+                                    lv_ylaraja = ka+1.96*kh/sqrt(n))
+  }
+  if(vinous==T){
+    kurtosis <- function(x) {
+      m4 <- mean((x - mean(x, na.rm=T))^4, na.rm=T)
+      kurtosis <- m4/(sd(x, na.rm=T)^4) - 3
+      kurtosis
+    }
+
+    skewness <-  function(x) {
+      m3 <- mean((x - mean(x, na.rm=T))^3, na.rm=T)
+      skewness <- m3/(sd(x, na.rm=T)^3)
+      skewness
+    }
+
+    taulukko_vinous <- aineisto %>%
+      summarise(across(c(!!!quos(...)), list(
+        vi = ~skewness(.x),
+        hu = ~kurtosis(.x)), .names = "{.col}.{.fn}")) %>%
+      tidyr::pivot_longer(cols = contains("."), names_sep = "\\.", names_to  = c("Muuttuja", ".value"))
+    taulukko <- left_join(taulukko, taulukko_vinous)
+  }
+
+  taulukko
 }
 
 
