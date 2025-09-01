@@ -1,7 +1,7 @@
 Package: sostieteidentaulukointityylit
 Type: Package
 Title: HY:n sosiaalitieteiden koulutusohjelmien taulukointifunktiot
-Version: 0.1.0
+Version: 0.1.1
 Author: Arho Toikka
 Maintainer: Arho Toikka <arho.toikka@helsinki.fi>
 Description: Funktiot Helsingin yliopiston sosiaalitieteiden koulutusohjelmien mukaisten tulostaulukoiden tekemiseen.
@@ -9,5 +9,5 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    dplyr, psych, forcats, janitor, broom, tibble, lm.beta, tidyselect, stats
-RoxygenNote: 7.2.3
+    dplyr, psych, forcats, janitor, broom, tibble, lm.beta, tidyselect, stats, rlang, stringr, tidyr
+RoxygenNote: 7.3.2

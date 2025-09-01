@@ -2,16 +2,29 @@
 % Please edit documentation in R/hy_sosiaalitieteiden_taulukointikomennot.R
 \name{tee_jatkuvan_muuttujan_esittely}
 \alias{tee_jatkuvan_muuttujan_esittely}
-\title{Esitellään jatkuva muuttuja.}
+\title{Esittele jatkuvia muuttujia}
 \usage{
-tee_jatkuvan_muuttujan_esittely(aineisto, ..., lv = F, vinous = F)
+tee_jatkuvan_muuttujan_esittely(aineisto, ..., lv = FALSE, vinous = FALSE)
 }
 \arguments{
-\item{aineisto}{Aineistotiedosto.}
+\item{aineisto}{Data frame, josta muuttujat lasketaan.}
+
+\item{...}{Valittavat muuttujat (tukee tidyselect-apureita kuten \code{c()},
+\code{starts_with()}, \code{var1:var5}).}
+
+\item{lv}{Logical. Jos \code{TRUE}, lisää 95\% luottamusvälit keskiarvolle.
+Oletus \code{FALSE}.}
+
+\item{vinous}{Logical. Jos \code{TRUE}, lisää vinouden (\code{vi}) ja
+huipukkuuden (\code{hu}). Oletus \code{FALSE}.}
 }
 \value{
-Valmis esittelytaulukko.
+Tibble, jossa sarakkeet: \code{Muuttuja}, \code{n}, \code{ka},
+  \code{kh}, sekä valinnaisesti \code{lv_alaraja}, \code{lv_ylaraja},
+  \code{vi}, \code{hu}.
 }
 \description{
-Funktio tekee jatkuvasta muuttujasta HY:n sosiaalitieteiden ohjeen mukaisen esittelytaulukon.
+Laskee valituille muuttujille havaintomäärän \code{n}, keskiarvon (\code{ka})
+ja keskihajonnan (\code{kh}). Valinnaisesti lisää 95 %:n luottamusvälin
+keskiarvolle sekä vinouden (\code{vi}) ja huipukkuuden (\code{hu}).
 }

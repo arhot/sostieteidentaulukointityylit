@@ -7,11 +7,12 @@
 tee_korrelaatiotaulukko(korrelaatiomatriisi)
 }
 \arguments{
-\item{korrelaatiomatriisi}{Korrelaatiomatriisi}
+\item{korrelaatiomatriisi}{psych::corr.test()-objekti tai lista, jossa komponentit r ja p.}
 }
 \value{
-Valmis korrelaatiotaulukko.
+Tibble: Muuttuja + yläkolmion korrelaatiot tähdillä.
 }
 \description{
-Funktio tekee korrelaatiomatriisista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
+Tekee yläkolmion korrelaatiotaulukon, jossa korrelaatiot on pyöristetty ja
+p-arvot esitetty merkitsevyystähdillä.
 }
