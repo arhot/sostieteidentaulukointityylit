@@ -229,36 +229,24 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli) {
 #' @export
 
 
+#' @importFrom rlang quos
 tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = FALSE) {
-  # Resolve the columns from ... robustly (supports tidyselect helpers)
-  sel <- tidyselect::eval_select(rlang::quos(...), data = aineisto)
-  cols <- names(sel)
-  if (length(cols) == 0L) stop("Valitse vähintään yksi muuttuja.")
 
-  # Helper coercer for mean/sd: try numeric; if factor, coerce underlying codes
-  .to_num <- function(x) {
-    if (is.numeric(x)) return(x)
-    suppressWarnings(as.numeric(x))
-  }
-
-  # Base summary: n, mean (ka), sd (kh)
   taulukko <- aineisto %>%
     dplyr::summarise(dplyr::across(
-      .cols = dplyr::all_of(cols),
+      .cols = c(!!!rlang::quos(...)),
       .fns  = list(
         n  = ~sum(!is.na(.x)),
-        ka = ~mean(.to_num(.x), na.rm = TRUE),
-        kh = ~stats::sd(.to_num(.x), na.rm = TRUE)
+        ka = ~mean(.x, na.rm = TRUE),
+        kh = ~stats::sd(.x, na.rm = TRUE)
       ),
       .names = "{.col}.{.fn}"
     )) %>%
     tidyr::pivot_longer(
-      cols = tidyselect::everything(),
-      names_to  = c("Muuttuja", ".value"),
-      names_sep = "\\."
+      cols = dplyr::contains("."),
+      names_sep = "\\.",
+      names_to  = c("Muuttuja", ".value")
     )
-
-  # Optional normal-approx CI for mean
   if (isTRUE(lv)) {
     taulukko <- taulukko %>%
       dplyr::mutate(
@@ -267,22 +255,19 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
       )
   }
 
-  # Optional skewness/kurtosis
   if (isTRUE(vinous)) {
     kurtosis <- function(x) {
-      x <- .to_num(x)
       m4 <- mean((x - mean(x, na.rm = TRUE))^4, na.rm = TRUE)
       m4 / (stats::sd(x, na.rm = TRUE)^4) - 3
     }
     skewness <- function(x) {
-      x <- .to_num(x)
       m3 <- mean((x - mean(x, na.rm = TRUE))^3, na.rm = TRUE)
       m3 / (stats::sd(x, na.rm = TRUE)^3)
     }
 
     taulukko_vinous <- aineisto %>%
       dplyr::summarise(dplyr::across(
-        .cols = dplyr::all_of(cols),
+        .cols = c(!!!rlang::quos(...)),
         .fns  = list(
           vi = ~skewness(.x),
           hu = ~kurtosis(.x)
@@ -290,18 +275,21 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
         .names = "{.col}.{.fn}"
       )) %>%
       tidyr::pivot_longer(
-        cols = tidyselect::everything(),
-        names_to  = c("Muuttuja", ".value"),
-        names_sep = "\\."
+        cols = dplyr::contains("."),
+        names_sep = "\\.",
+        names_to  = c("Muuttuja", ".value")
       )
 
     taulukko <- dplyr::left_join(taulukko, taulukko_vinous, by = "Muuttuja")
   }
 
-  fmt_cols <- intersect(c("ka", "kh", "lv_alaraja", "lv_ylaraja"), names(taulukko))
+  # 4) FORMAT for display (half-up + trailing zeros) — convert selected cols to character
+  if (exists("round_tidy_half_up")) {
+    fmt_cols <- intersect(c("ka", "kh", "lv_alaraja", "lv_ylaraja"), names(taulukko))
     for (cc in fmt_cols) {
       taulukko[[cc]] <- round_tidy_half_up(taulukko[[cc]], digits = 3)
-      }
+    }
+  }
 
   taulukko
 }
