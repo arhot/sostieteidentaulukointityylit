@@ -12,7 +12,8 @@ Helsingin yliopiston sosiaalitieteiden koulutusohjelmien mukaisia
 tulostaulukoita. Tyyli noudattelee pääpiirteissään APA 7th -ohjeita,
 muutamia suomen kieleen liittyviä poikkeuksia lukuunottamatta.
 
-Versio 0.1, testaillaan. Tällä hetkellä paketissa on seuraavat funktiot:
+Versio 0.1.1 - kurssitarkoituksiin. Tällä hetkellä paketissa on
+seuraavat funktiot:
 
 - tee_faktorianalyysitaulukko() - psych-paketin faktorianalyyseille
 
