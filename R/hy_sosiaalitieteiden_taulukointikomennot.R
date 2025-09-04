@@ -20,7 +20,7 @@
 #' @export
 
 tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalierotin="piste", piilota_lataukset_alle = 0.3) {
-  if (!inherits(faktorimalli, "fa")) {stop("Ensimmäisen argumentin tulee olla faktorianalyysin tulosobjekti.")}
+  if (!inherits(faktorimalli, "fa") && !inherits(faktorimalli, "principal")) {stop("Ensimmäisen argumentin tulee olla faktorianalyysin tulosobjekti.")}
 
   taulukko1 <-
     faktorimalli$loadings %>%
@@ -39,7 +39,23 @@ tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalier
         )
       )
     )
+  comm_vec <- if (!is.null(faktorimalli$h2)) {
+    faktorimalli$h2
+  } else if (!is.null(faktorimalli$communality)) {
+    faktorimalli$communality
+  } else {
+    L <- faktorimalli$loadings %>% unclass() %>% as.matrix()
+    rowSums(L^2)
+  }
 
+  comm_name <- if (kieli == "suomi") "Kommunaliteetti" else "Communality"
+  comm_df <- tibble::tibble(
+    Muuttuja = rownames(faktorimalli$loadings),
+    "{comm_name}" := round_tidy_half_up(comm_vec, 2) %>% format(nsmall = 2)
+  )
+
+  # Add communalities as a new column
+  taulukko1 <- taulukko1 %>% dplyr::left_join(comm_df, by = "Muuttuja")
   taulukko2 <- faktorimalli$Vaccounted %>% as_tibble(rownames = "Muuttuja") %>%
     mutate(across(tidyselect::vars_select_helpers$where(is.numeric), ~round_tidy_half_up(.x, 2) %>% format(nsmall=2))) %>%
     filter(Muuttuja == "SS loadings" | Muuttuja == "Proportion Var")
