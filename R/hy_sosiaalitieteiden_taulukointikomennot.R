@@ -342,6 +342,27 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
   dplyr::rename_with(taulukko, ~ vapply(.x, .tr, character(1), kieli = kieli))
 }
 
+#' Esittele luokiteltu muuttuja
+#'
+#' Laskee luokitellulle muuttujalle frekvenssit ja prosenttiosuudet
+#' \code{janitor::tabyl()}-funktion avulla.
+#'
+#' @param aineisto Data frame, josta muuttuja lasketaan.
+#' @param muuttuja Luokiteltava muuttuja (tidy eval -syntaksi).
+#' @param desimaalipaikkoja Desimaalipaikat prosenttiluvuille (oletus 2).
+#' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
+#'
+#' @return Tibble: muuttuja, \code{n}, \code{\%} ja tarvittaessa
+#'   \code{\% vastanneista} (kun aineistossa on puuttuvia havaintoja).
+#' @export
+tee_luokitellun_muuttujan_esittely <- function(aineisto, muuttuja, desimaalipaikkoja = 2, kieli = "suomi") {
+  aineisto |>
+    janitor::tabyl({{ muuttuja }}) |>
+    janitor::adorn_pct_formatting(digits = desimaalipaikkoja) |>
+    tibble::as_tibble() |>
+    dplyr::rename_with(~ vapply(.x, .tr, character(1), kieli = kieli))
+}
+
 #' @title Tehdään logistisen regression taulukko.
 #'
 #' @description Funktio tekee logisesta regressiomallista HY:n sosiaalitieteiden ohjeen mukaisen tulostaulukon
@@ -522,7 +543,9 @@ p_coding <- function(pval, digits = 3) {
   Ominaisarvo         = c(suomi = "Ominaisarvo",        eng = "SS loadings"),
   Selitysosuus        = c(suomi = "Selitysosuus",       eng = "Proportion Var"),
   `R2, korjattu`      = c(suomi = "R2, korjattu",      eng = "R2, adjusted"),
-  Malli               = c(suomi = "Malli",             eng = "Model")
+  Malli               = c(suomi = "Malli",             eng = "Model"),
+  percent             = c(suomi = "%",                eng = "%"),
+  valid_percent       = c(suomi = "% vastanneista",   eng = "valid %")
 )
 
 #' Internal translation helper
