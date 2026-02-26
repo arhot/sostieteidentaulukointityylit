@@ -4,10 +4,12 @@
 \alias{tee_yhdistelmataulukko}
 \title{Yhdistelmätaulukko useista regressiotaulukoista}
 \usage{
-tee_yhdistelmataulukko(...)
+tee_yhdistelmataulukko(..., kieli = "suomi")
 }
 \arguments{
 \item{...}{Regressiotaulukot (data framet), jotka yhdistetään.}
+
+\item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
 }
 \value{
 Yhdistetty taulukko otsikkoriveineen.

@@ -4,10 +4,12 @@
 \alias{tee_korrelaatiotaulukko}
 \title{Korrelaatiotaulukko}
 \usage{
-tee_korrelaatiotaulukko(korrelaatiomatriisi)
+tee_korrelaatiotaulukko(korrelaatiomatriisi, kieli = "suomi")
 }
 \arguments{
 \item{korrelaatiomatriisi}{psych::corr.test()-objekti tai lista, jossa komponentit r ja p.}
+
+\item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
 }
 \value{
 Tibble: Muuttuja + yläkolmion korrelaatiot tähdillä.

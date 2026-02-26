@@ -4,10 +4,12 @@
 \alias{tee_regressiotaulukko}
 \title{Regressioanalyysin tulostaulukko}
 \usage{
-tee_regressiotaulukko(malli)
+tee_regressiotaulukko(malli, kieli = "suomi")
 }
 \arguments{
 \item{malli}{Lineaarinen regressioanalyysimalli.}
+
+\item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
 }
 \value{
 Valmis regressioanalyysitaulukko.

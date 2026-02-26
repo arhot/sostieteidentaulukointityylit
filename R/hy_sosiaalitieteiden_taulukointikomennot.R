@@ -49,7 +49,7 @@ tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalier
     rowSums(L^2)
   }
 
-  comm_name <- if (kieli == "suomi") "Kommunaliteetti" else "Communality"
+  comm_name <- .tr("Kommunaliteetti", kieli)
   comm_df <- tibble::tibble(
     Muuttuja = rownames(faktorimalli$loadings),
     "{comm_name}" := round_tidy_half_up(comm_vec, 2) %>% format(nsmall = 2)
@@ -61,9 +61,11 @@ tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalier
     mutate(across(tidyselect::vars_select_helpers$where(is.numeric), ~round_tidy_half_up(.x, 2) %>% format(nsmall=2))) %>%
     filter(Muuttuja == "SS loadings" | Muuttuja == "Proportion Var")
 
-  if(kieli=="suomi"){
-    taulukko2 <- taulukko2 %>% mutate(Muuttuja = fct_recode(Muuttuja, "Ominaisarvo" = "SS loadings", "Selitysosuus" = "Proportion Var"))
-  }
+  taulukko2 <- taulukko2 %>%
+    dplyr::mutate(Muuttuja = dplyr::recode(Muuttuja,
+      "SS loadings"    = .tr("Ominaisarvo",   kieli),
+      "Proportion Var" = .tr("Selitysosuus",  kieli)
+    ))
 
   valmis_taulukko <- taulukko1 %>% bind_rows(taulukko2)
 
@@ -80,9 +82,10 @@ tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalier
 #' @description Tekee yläkolmion korrelaatiotaulukon, jossa korrelaatiot on pyöristetty ja
 #' p-arvot esitetty merkitsevyystähdillä.
 #' @param korrelaatiomatriisi psych::corr.test()-objekti tai lista, jossa komponentit r ja p.
+#' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
 #' @return Tibble: Muuttuja + yläkolmion korrelaatiot tähdillä.
 #' @export
-tee_korrelaatiotaulukko <- function(korrelaatiomatriisi) {
+tee_korrelaatiotaulukko <- function(korrelaatiomatriisi, kieli = "suomi") {
   # validate
   if (is.null(korrelaatiomatriisi) || is.null(korrelaatiomatriisi$r) || is.null(korrelaatiomatriisi$p)) {
     stop("Ensimmäisen argumentin tulee olla psych::corr.test()-tulos (tai lista, jossa on komponentit r ja p).")
@@ -93,6 +96,7 @@ tee_korrelaatiotaulukko <- function(korrelaatiomatriisi) {
 
   # build upper triangle with stars
   out <- .format_corr_upper(r_mat, p_mat, digits = 2)
+  out <- dplyr::rename_with(out, ~vapply(.x, .tr, character(1), kieli = kieli))
 
   return(out)
 }
@@ -104,9 +108,10 @@ tee_korrelaatiotaulukko <- function(korrelaatiomatriisi) {
 #' n, keskiarvo (ka) ja keskihajonta (kh).
 #' @param korrelaatiomatriisi psych::corr.test()-objekti tai lista, jossa komponentit r ja p.
 #' @param aineisto data.frame, josta lasketaan n, ka ja kh. Sen tulee sisältää samat muuttujat kuin korrelaatiomatriisissa.
+#' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
 #' @return Tibble: Muuttuja, n, ka, kh + yläkolmion korrelaatiot tähdillä.
 #' @export
-tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi, aineisto) {
+tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi, aineisto, kieli = "suomi") {
   # validate
   if (is.null(korrelaatiomatriisi) || is.null(korrelaatiomatriisi$r) || is.null(korrelaatiomatriisi$p)) {
     stop("Ensimmäisen argumentin tulee olla psych::corr.test()-tulos (tai lista, jossa on komponentit r ja p).")
@@ -146,6 +151,7 @@ tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi,
   corr_tbl <- .format_corr_upper(r_mat, p_mat, digits = 2)
 
   out <- dplyr::left_join(stats_df, corr_tbl, by = "Muuttuja")
+  out <- dplyr::rename_with(out, ~vapply(.x, .tr, character(1), kieli = kieli))
   return(out)
 }
 
@@ -155,10 +161,11 @@ tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi,
 #'
 #' @description Funktio tekee lineaarisesta regressioanalyysimallista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
 #' @param malli Lineaarinen regressioanalyysimalli.
+#' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
 #' @return Valmis regressioanalyysitaulukko.
 #' @export
 
-tee_regressiotaulukko <- function(malli) {
+tee_regressiotaulukko <- function(malli, kieli = "suomi") {
   if (!inherits(malli, "lm")) {
     stop("Ensimmäisen argumentin tulee olla regressioanalyysin tulosobjekti.")
   }
@@ -178,9 +185,10 @@ tee_regressiotaulukko <- function(malli) {
     round_tidy_half_up(3) %>%                              # character
     tibble::as_tibble(rownames = "Muuttuja") %>%
     dplyr::rename(B = value) %>%
-    dplyr::mutate(Muuttuja = "R2, korjattu")
+    dplyr::mutate(Muuttuja = .tr("R2, korjattu", kieli))
 
-  dplyr::bind_rows(taulukko, selitysosuus)
+  tulos <- dplyr::bind_rows(taulukko, selitysosuus)
+  dplyr::rename_with(tulos, ~vapply(.x, .tr, character(1), kieli = kieli))
 }
 
 
@@ -189,10 +197,11 @@ tee_regressiotaulukko <- function(malli) {
 #' @description Funktio tekee lineaarisesta regressioanalyysimallista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon, joss
 #' selitettävä muuttuja rivinä.
 #' @param malli Lineaarinen regressioanalyysimalli.
+#' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
 #' @return Valmis regressioanalyysitaulukko.
 #' @export
 
-tee_regressiotaulukko_selitettava_rivina <- function(malli) {
+tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi") {
   if (!inherits(malli, "lm")) {
     stop("Ensimmäisen argumentin tulee olla regressioanalyysin tulosobjekti.")
   }
@@ -215,14 +224,15 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli) {
 
   selitysosuus <- tibble::tibble(
     Selitettava  = selitettava,
-    Muuttuja     = "R2, korjattu",
+    Muuttuja     = .tr("R2, korjattu", kieli),
     B            = round_tidy_half_up(summary(malli)$adj.r.squared, 3),
     Luottamusvali = NA_character_,
     beta         = NA_real_,
     p            = NA_character_
   )
 
-  dplyr::bind_rows(taulukko, selitysosuus)
+  tulos <- dplyr::bind_rows(taulukko, selitysosuus)
+  dplyr::rename_with(tulos, ~vapply(.x, .tr, character(1), kieli = kieli))
 }
 
 
@@ -239,15 +249,18 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli) {
 #'   Oletus \code{FALSE}.
 #' @param vinous Logical. Jos \code{TRUE}, lisää vinouden (\code{vi}) ja
 #'   huipukkuuden (\code{hu}). Oletus \code{FALSE}.
+#' @param vaihteluvali Logical. Jos \code{TRUE}, lisää minimi- (\code{minimi})
+#'   ja maksimiarvon (\code{maksimi}). Oletus \code{FALSE}.
+#' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
 #'
 #' @return Tibble, jossa sarakkeet: \code{Muuttuja}, \code{n}, \code{ka},
 #'   \code{kh}, sekä valinnaisesti \code{lv_alaraja}, \code{lv_ylaraja},
-#'   \code{vi}, \code{hu}.
+#'   \code{vi}, \code{hu}, \code{minimi}, \code{maksimi}.
 #' @export
 
 
 #' @importFrom rlang quos
-tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE) {
+tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE, kieli = "suomi") {
 
   taulukko <- aineisto %>%
     dplyr::summarise(dplyr::across(
@@ -327,7 +340,7 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
     }
   }
 
-  taulukko
+  dplyr::rename_with(taulukko, ~vapply(.x, .tr, character(1), kieli = kieli))
 }
 
 #' @title Tehdään logistisen regression taulukko.
@@ -337,10 +350,11 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
 #' @param luottamustaso Luottamusvälin taso (oletus 0.95).
 #' @param pyorista_est Desimaalit estimaateille, SE:lle ja z:lle (oletus 2).
 #' @param pyorista_p Desimaalit p-arvoille (oletus 3; käytetään \code{p_coding}).
+#' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
 #' @return Valmis esittelytaulukko.
 #' @export
 
-tee_log_regressiotaulukko <- function(malli, luottamustaso = 0.95, pyorista_est = 2, pyorista_p = 3) {
+tee_log_regressiotaulukko <- function(malli, luottamustaso = 0.95, pyorista_est = 2, pyorista_p = 3, kieli = "suomi") {
   if (!inherits(malli, "glm") || is.null(malli$family) || malli$family$family != "binomial") {
     stop("Ensimmäisen argumentin tulee olla logistisen regressioanalyysin (glm, family = binomial) tulosobjekti.")
   }
@@ -362,6 +376,7 @@ tee_log_regressiotaulukko <- function(malli, luottamustaso = 0.95, pyorista_est 
     select(Muuttuja, Vetosuhde = OR, `95% Luottamusvali` = `OR CI`, p) %>%
     dplyr::filter(Muuttuja != "(Intercept)")
 
+  malli_summary <- dplyr::rename_with(malli_summary, ~vapply(.x, .tr, character(1), kieli = kieli))
   return(malli_summary)
 }
 
@@ -489,6 +504,35 @@ p_coding <- function(pval, digits = 3) {
   tibble::as_tibble(disp_trim, rownames = "Muuttuja")
 }
 
+#' Internal translation helper
+#' @keywords internal
+.tr <- function(key, kieli = "suomi") {
+  translations <- list(
+    Muuttuja              = c(suomi = "Muuttuja",              eng = "Variable"),
+    ka                    = c(suomi = "ka",                   eng = "mean"),
+    kh                    = c(suomi = "kh",                   eng = "sd"),
+    lv_alaraja            = c(suomi = "lv_alaraja",           eng = "ci_lo"),
+    lv_ylaraja            = c(suomi = "lv_ylaraja",           eng = "ci_hi"),
+    vi                    = c(suomi = "vi",                   eng = "skew"),
+    hu                    = c(suomi = "hu",                   eng = "kurt"),
+    minimi                = c(suomi = "minimi",               eng = "min"),
+    maksimi               = c(suomi = "maksimi",              eng = "max"),
+    Luottamusvali         = c(suomi = "Luottamusvali",        eng = "CI"),
+    `95% Luottamusvali`   = c(suomi = "95% Luottamusvali",   eng = "95% CI"),
+    Vetosuhde             = c(suomi = "Vetosuhde",            eng = "OR"),
+    Selitettava           = c(suomi = "Selitettava",          eng = "Outcome"),
+    Kommunaliteetti       = c(suomi = "Kommunaliteetti",      eng = "Communality"),
+    Ominaisarvo           = c(suomi = "Ominaisarvo",          eng = "SS loadings"),
+    Selitysosuus          = c(suomi = "Selitysosuus",         eng = "Proportion Var"),
+    `R2, korjattu`        = c(suomi = "R2, korjattu",        eng = "R2, adjusted"),
+    Malli                 = c(suomi = "Malli",               eng = "Model")
+  )
+  t <- translations[[key]]
+  if (is.null(t)) return(key)
+  lang <- if (kieli == "suomi") "suomi" else "eng"
+  unname(t[lang])
+}
+
 #' Half-up rounding with tidy trailing zeros
 #' @param x numeric
 #' @param digits integer number of decimals
@@ -517,17 +561,18 @@ round_tidy_half_up <- function(x, digits = 3) {
 #' sarakkeet ovat tyhjiä.
 #'
 #' @param ... Regressiotaulukot (data framet), jotka yhdistetään.
+#' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
 #' @return Yhdistetty taulukko otsikkoriveineen.
 #' @export
 
-tee_yhdistelmataulukko <- function(...) {
+tee_yhdistelmataulukko <- function(..., kieli = "suomi") {
   taulukot <- list(...)
   if (length(taulukot) == 0) stop("Anna vähintään yksi taulukko.")
 
   yhdistelty <- purrr::imap(taulukot, function(taulukko, i) {
     otsikkorivi <- taulukko[1, ] %>%
       dplyr::mutate(dplyr::across(dplyr::everything(), ~ NA)) %>%
-      dplyr::mutate(Muuttuja = paste0("Malli ", i))
+      dplyr::mutate(Muuttuja = paste0(.tr("Malli", kieli), " ", i))
     dplyr::bind_rows(otsikkorivi, taulukko)
   }) %>%
     purrr::reduce(dplyr::bind_rows)

@@ -4,12 +4,14 @@
 \alias{tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin}
 \title{Korrelaatiotaulukko kuvailevin tunnusluvuin}
 \usage{
-tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin(korrelaatiomatriisi, aineisto)
+tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin(korrelaatiomatriisi, aineisto, kieli = "suomi")
 }
 \arguments{
 \item{korrelaatiomatriisi}{psych::corr.test()-objekti tai lista, jossa komponentit r ja p.}
 
 \item{aineisto}{data.frame, josta lasketaan n, ka ja kh. Sen tulee sisältää samat muuttujat kuin korrelaatiomatriisissa.}
+
+\item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
 }
 \value{
 Tibble: Muuttuja, n, ka, kh + yläkolmion korrelaatiot tähdillä.

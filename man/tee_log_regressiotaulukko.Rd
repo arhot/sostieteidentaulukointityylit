@@ -8,7 +8,8 @@ tee_log_regressiotaulukko(
   malli,
   luottamustaso = 0.95,
   pyorista_est = 2,
-  pyorista_p = 3
+  pyorista_p = 3,
+  kieli = "suomi"
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ tee_log_regressiotaulukko(
 \item{pyorista_est}{Desimaalit estimaateille, SE:lle ja z:lle (oletus 2).}
 
 \item{pyorista_p}{Desimaalit p-arvoille (oletus 3; käytetään \code{p_coding}).}
+
+\item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
 }
 \value{
 Valmis esittelytaulukko.

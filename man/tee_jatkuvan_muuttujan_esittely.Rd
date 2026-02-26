@@ -4,7 +4,7 @@
 \alias{tee_jatkuvan_muuttujan_esittely}
 \title{Esittele jatkuvia muuttujia}
 \usage{
-tee_jatkuvan_muuttujan_esittely(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE)
+tee_jatkuvan_muuttujan_esittely(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE, kieli = "suomi")
 }
 \arguments{
 \item{aineisto}{Data frame, josta muuttujat lasketaan.}
@@ -20,6 +20,8 @@ huipukkuuden (\code{hu}). Oletus \code{FALSE}.}
 
 \item{vaihteluvali}{Logical. Jos \code{TRUE}, lisää minimi- (\code{minimi}) ja
 maksimiarvo (\code{maksimi}). Oletus \code{FALSE}.}
+
+\item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
 }
 \value{
 Tibble, jossa sarakkeet: \code{Muuttuja}, \code{n}, \code{ka},
