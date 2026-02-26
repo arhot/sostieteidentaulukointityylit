@@ -4,7 +4,7 @@
 \alias{tee_jatkuvan_muuttujan_esittely}
 \title{Esittele jatkuvia muuttujia}
 \usage{
-tee_jatkuvan_muuttujan_esittely(aineisto, ..., lv = FALSE, vinous = FALSE)
+tee_jatkuvan_muuttujan_esittely(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE)
 }
 \arguments{
 \item{aineisto}{Data frame, josta muuttujat lasketaan.}
@@ -17,14 +17,18 @@ Oletus \code{FALSE}.}
 
 \item{vinous}{Logical. Jos \code{TRUE}, lisää vinouden (\code{vi}) ja
 huipukkuuden (\code{hu}). Oletus \code{FALSE}.}
+
+\item{vaihteluvali}{Logical. Jos \code{TRUE}, lisää minimi- (\code{minimi}) ja
+maksimiarvo (\code{maksimi}). Oletus \code{FALSE}.}
 }
 \value{
 Tibble, jossa sarakkeet: \code{Muuttuja}, \code{n}, \code{ka},
   \code{kh}, sekä valinnaisesti \code{lv_alaraja}, \code{lv_ylaraja},
-  \code{vi}, \code{hu}.
+  \code{vi}, \code{hu}, \code{minimi}, \code{maksimi}.
 }
 \description{
 Laskee valituille muuttujille havaintomäärän \code{n}, keskiarvon (\code{ka})
 ja keskihajonnan (\code{kh}). Valinnaisesti lisää 95 %:n luottamusvälin
-keskiarvolle sekä vinouden (\code{vi}) ja huipukkuuden (\code{hu}).
+keskiarvolle, vinouden (\code{vi}) ja huipukkuuden (\code{hu}) sekä
+vaihteluvälin (\code{minimi} ja \code{maksimi}).
 }

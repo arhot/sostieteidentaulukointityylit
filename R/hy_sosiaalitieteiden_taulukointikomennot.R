@@ -247,7 +247,7 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli) {
 
 
 #' @importFrom rlang quos
-tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = FALSE) {
+tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE) {
 
   taulukko <- aineisto %>%
     dplyr::summarise(dplyr::across(
@@ -300,9 +300,28 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
     taulukko <- dplyr::left_join(taulukko, taulukko_vinous, by = "Muuttuja")
   }
 
+  if (isTRUE(vaihteluvali)) {
+    taulukko_vv <- aineisto %>%
+      dplyr::summarise(dplyr::across(
+        .cols = c(!!!rlang::quos(...)),
+        .fns  = list(
+          minimi  = ~min(.x, na.rm = TRUE),
+          maksimi = ~max(.x, na.rm = TRUE)
+        ),
+        .names = "{.col}.{.fn}"
+      )) %>%
+      tidyr::pivot_longer(
+        cols = dplyr::contains("."),
+        names_sep = "\\.",
+        names_to  = c("Muuttuja", ".value")
+      )
+
+    taulukko <- dplyr::left_join(taulukko, taulukko_vv, by = "Muuttuja")
+  }
+
   # 4) FORMAT for display (half-up + trailing zeros) — convert selected cols to character
   if (exists("round_tidy_half_up")) {
-    fmt_cols <- intersect(c("ka", "kh", "lv_alaraja", "lv_ylaraja"), names(taulukko))
+    fmt_cols <- intersect(c("ka", "kh", "lv_alaraja", "lv_ylaraja", "minimi", "maksimi"), names(taulukko))
     for (cc in fmt_cols) {
       taulukko[[cc]] <- round_tidy_half_up(taulukko[[cc]], digits = 3)
     }
