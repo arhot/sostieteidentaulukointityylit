@@ -4,6 +4,7 @@
 #' @import broom
 #' @import tidyr
 #' @import lm.beta
+#' @import purrr
 #' @importFrom stringr str_replace_all
 #' @importFrom rlang quos enquos ensyms
 #' @encoding UTF-8
@@ -486,6 +487,33 @@ round_tidy_half_up <- function(x, digits = 3) {
   # preserve NA as NA_character_
   out[is.na(x)] <- NA_character_
   out
+}
+
+
+#' @title Yhdistelmätaulukko useista regressiotaulukoista
+#'
+#' @description Yhdistää useita \code{tee_regressiotaulukko()}-funktion tuottamia
+#' taulukoita yhdeksi taulukoksi. Jokaisen osataulukon eteen lisätään otsikkorivi,
+#' jossa \code{Muuttuja}-sarakkeessa lukee "Malli 1", "Malli 2" jne. ja muut
+#' sarakkeet ovat tyhjiä.
+#'
+#' @param ... Regressiotaulukot (data framet), jotka yhdistetään.
+#' @return Yhdistetty taulukko otsikkoriveineen.
+#' @export
+
+tee_yhdistelmataulukko <- function(...) {
+  taulukot <- list(...)
+  if (length(taulukot) == 0) stop("Anna vähintään yksi taulukko.")
+
+  yhdistelty <- purrr::imap(taulukot, function(taulukko, i) {
+    otsikkorivi <- taulukko[1, ] %>%
+      dplyr::mutate(dplyr::across(dplyr::everything(), ~ NA)) %>%
+      dplyr::mutate(Muuttuja = paste0("Malli ", i))
+    dplyr::bind_rows(otsikkorivi, taulukko)
+  }) %>%
+    purrr::reduce(dplyr::bind_rows)
+
+  yhdistelty
 }
 
 

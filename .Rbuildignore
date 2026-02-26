@@ -2,3 +2,5 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.Rmd$
+^jatkuvan_muuttujan_taulukointi_talteen\.R$
+^testailufunktioita\.R$

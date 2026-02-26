@@ -9,5 +9,5 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    dplyr, psych, forcats, janitor, broom, tibble, lm.beta, tidyselect, stats, rlang, stringr, tidyr
+    dplyr, psych, forcats, janitor, broom, tibble, lm.beta, tidyselect, stats, rlang, stringr, tidyr, purrr
 RoxygenNote: 7.3.2
