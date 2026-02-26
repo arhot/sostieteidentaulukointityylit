@@ -1,12 +1,4 @@
-#' @import dplyr
-#' @import psych
-#' @import forcats
-#' @import broom
-#' @import tidyr
-#' @import lm.beta
-#' @import purrr
-#' @importFrom stringr str_replace_all
-#' @importFrom rlang quos enquos ensyms
+#' @importFrom rlang '!!!'
 #' @encoding UTF-8
 
 
@@ -20,16 +12,18 @@
 #' @return Valmis faktorianalyysitaulukko.
 #' @export
 
-tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalierotin="piste", piilota_lataukset_alle = 0.3) {
-  if (!inherits(faktorimalli, "fa") && !inherits(faktorimalli, "principal")) {stop("Ensimmäisen argumentin tulee olla faktorianalyysin tulosobjekti.")}
+tee_faktorianalyysitaulukko <- function(faktorimalli, kieli = "suomi", desimaalierotin = "piste", piilota_lataukset_alle = 0.3) {
+  if (!inherits(faktorimalli, "fa") && !inherits(faktorimalli, "principal")) {
+    stop("Ensimmäisen argumentin tulee olla faktorianalyysin tulosobjekti.")
+  }
 
   taulukko1 <-
-    faktorimalli$loadings %>%
-    psych::fa.sort() %>%
-    unclass() %>%
-    as.data.frame() %>%
-    tibble::rownames_to_column("Muuttuja") %>%
-    tibble::as_tibble() %>%
+    faktorimalli$loadings |>
+    psych::fa.sort() |>
+    unclass() |>
+    as.data.frame() |>
+    tibble::rownames_to_column("Muuttuja") |>
+    tibble::as_tibble() |>
     dplyr::mutate(
       dplyr::across(
         dplyr::where(is.numeric),
@@ -40,40 +34,46 @@ tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalier
         )
       )
     )
+
   comm_vec <- if (!is.null(faktorimalli$h2)) {
     faktorimalli$h2
   } else if (!is.null(faktorimalli$communality)) {
     faktorimalli$communality
   } else {
-    L <- faktorimalli$loadings %>% unclass() %>% as.matrix()
+    L <- faktorimalli$loadings |> unclass() |> as.matrix()
     rowSums(L^2)
   }
 
   comm_name <- .tr("Kommunaliteetti", kieli)
   comm_df <- tibble::tibble(
     Muuttuja = rownames(faktorimalli$loadings),
-    "{comm_name}" := round_tidy_half_up(comm_vec, 2) %>% format(nsmall = 2)
+    "{comm_name}" := round_tidy_half_up(comm_vec, 2) |> format(nsmall = 2)
   )
 
   # Add communalities as a new column
-  taulukko1 <- taulukko1 %>% dplyr::left_join(comm_df, by = "Muuttuja")
-  taulukko2 <- faktorimalli$Vaccounted %>% as_tibble(rownames = "Muuttuja") %>%
-    mutate(across(tidyselect::vars_select_helpers$where(is.numeric), ~round_tidy_half_up(.x, 2) %>% format(nsmall=2))) %>%
-    filter(Muuttuja == "SS loadings" | Muuttuja == "Proportion Var")
+  taulukko1 <- taulukko1 |> dplyr::left_join(comm_df, by = "Muuttuja")
 
-  taulukko2 <- taulukko2 %>%
-    dplyr::mutate(Muuttuja = dplyr::recode(Muuttuja,
-      "SS loadings"    = .tr("Ominaisarvo",   kieli),
-      "Proportion Var" = .tr("Selitysosuus",  kieli)
+  taulukko2 <- faktorimalli$Vaccounted |>
+    tibble::as_tibble(rownames = "Muuttuja") |>
+    dplyr::mutate(
+      dplyr::across(dplyr::where(is.numeric), ~ round_tidy_half_up(.x, 2) |> format(nsmall = 2))
+    ) |>
+    dplyr::filter(Muuttuja == "SS loadings" | Muuttuja == "Proportion Var") |>
+    dplyr::mutate(Muuttuja = dplyr::case_match(
+      Muuttuja,
+      "SS loadings"    ~ .tr("Ominaisarvo",  kieli),
+      "Proportion Var" ~ .tr("Selitysosuus", kieli),
+      .default = Muuttuja
     ))
 
-  valmis_taulukko <- taulukko1 %>% bind_rows(taulukko2)
+  valmis_taulukko <- dplyr::bind_rows(taulukko1, taulukko2)
 
-  if(desimaalierotin=="pilkku"){
-    valmis_taulukko <- valmis_taulukko %>% mutate(across(everything(), ~str_replace_all(.x, "\\.", ",")))
+  if (desimaalierotin == "pilkku") {
+    valmis_taulukko <- valmis_taulukko |>
+      dplyr::mutate(dplyr::across(dplyr::everything(), ~ stringr::str_replace_all(.x, "\\.", ",")))
   }
 
-  valmis_taulukko
+  dplyr::rename_with(valmis_taulukko, ~ vapply(.x, .tr, character(1), kieli = kieli))
 }
 
 
@@ -170,25 +170,26 @@ tee_regressiotaulukko <- function(malli, kieli = "suomi") {
     stop("Ensimmäisen argumentin tulee olla regressioanalyysin tulosobjekti.")
   }
 
-  taulukko <- broom::tidy(malli, conf.int = TRUE) %>%
-    tibble::add_column(beta = lm.beta::lm.beta(malli)$standardized.coefficients) %>%
-    dplyr::select(Muuttuja = term, B = estimate, LV_alaraja = conf.low, LV_ylaraja = conf.high, beta, p = p.value) %>%
-    dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~round(., 3))) %>%
+  taulukko <- broom::tidy(malli, conf.int = TRUE) |>
+    tibble::add_column(beta = lm.beta::lm.beta(malli)$standardized.coefficients) |>
+    dplyr::select(Muuttuja = term, B = estimate, LV_alaraja = conf.low, LV_ylaraja = conf.high, beta, p = p.value) |>
+    dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3))) |>
     dplyr::mutate(
       p = sapply(p, p_coding),
       Luottamusvali = paste("[", LV_alaraja, ",", LV_ylaraja, "]"),
       B = round_tidy_half_up(B, 3)
-    ) %>% dplyr::select(Muuttuja, B, beta, Luottamusvali, p)  %>%
+    ) |>
+    dplyr::select(Muuttuja, B, beta, Luottamusvali, p) |>
     dplyr::filter(Muuttuja != "(Intercept)")
 
-  selitysosuus <- summary(malli)$adj.r.squared %>%
-    round_tidy_half_up(3) %>%                              # character
-    tibble::as_tibble(rownames = "Muuttuja") %>%
-    dplyr::rename(B = value) %>%
+  selitysosuus <- summary(malli)$adj.r.squared |>
+    round_tidy_half_up(3) |>
+    tibble::as_tibble(rownames = "Muuttuja") |>
+    dplyr::rename(B = value) |>
     dplyr::mutate(Muuttuja = .tr("R2, korjattu", kieli))
 
   tulos <- dplyr::bind_rows(taulukko, selitysosuus)
-  dplyr::rename_with(tulos, ~vapply(.x, .tr, character(1), kieli = kieli))
+  dplyr::rename_with(tulos, ~ vapply(.x, .tr, character(1), kieli = kieli))
 }
 
 
@@ -208,31 +209,31 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi") {
 
   selitettava <- all.vars(stats::terms(malli))[1]
 
-  taulukko <- broom::tidy(malli, conf.int = TRUE) %>%
-    tibble::add_column(beta = lm.beta::lm.beta(malli)$standardized.coefficients) %>%
+  taulukko <- broom::tidy(malli, conf.int = TRUE) |>
+    tibble::add_column(beta = lm.beta::lm.beta(malli)$standardized.coefficients) |>
     dplyr::mutate(
-      LV_alaraja = round(conf.low, 3),
-      LV_ylaraja = round(conf.high, 3),
-      beta       = round(beta, 3),
-      p          = sapply(p.value, p_coding),
-      B          = round_tidy_half_up(estimate, 3),
+      LV_alaraja    = round(conf.low, 3),
+      LV_ylaraja    = round(conf.high, 3),
+      beta          = round(beta, 3),
+      p             = sapply(p.value, p_coding),
+      B             = round_tidy_half_up(estimate, 3),
       Luottamusvali = paste0("[", LV_alaraja, ", ", LV_ylaraja, "]")
-    ) %>%
-    dplyr::select(Muuttuja = term, B, Luottamusvali, beta, p) %>%
-    dplyr::mutate(Selitettava = selitettava) %>%
+    ) |>
+    dplyr::select(Muuttuja = term, B, Luottamusvali, beta, p) |>
+    dplyr::mutate(Selitettava = selitettava) |>
     dplyr::filter(Muuttuja != "(Intercept)")
 
   selitysosuus <- tibble::tibble(
-    Selitettava  = selitettava,
-    Muuttuja     = .tr("R2, korjattu", kieli),
-    B            = round_tidy_half_up(summary(malli)$adj.r.squared, 3),
+    Selitettava   = selitettava,
+    Muuttuja      = .tr("R2, korjattu", kieli),
+    B             = round_tidy_half_up(summary(malli)$adj.r.squared, 3),
     Luottamusvali = NA_character_,
-    beta         = NA_real_,
-    p            = NA_character_
+    beta          = NA_real_,
+    p             = NA_character_
   )
 
   tulos <- dplyr::bind_rows(taulukko, selitysosuus)
-  dplyr::rename_with(tulos, ~vapply(.x, .tr, character(1), kieli = kieli))
+  dplyr::rename_with(tulos, ~ vapply(.x, .tr, character(1), kieli = kieli))
 }
 
 
@@ -259,10 +260,9 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi") {
 #' @export
 
 
-#' @importFrom rlang quos
 tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE, kieli = "suomi") {
 
-  taulukko <- aineisto %>%
+  taulukko <- aineisto |>
     dplyr::summarise(dplyr::across(
       .cols = c(!!!rlang::quos(...)),
       .fns  = list(
@@ -271,14 +271,15 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
         kh = ~stats::sd(.x, na.rm = TRUE)
       ),
       .names = "{.col}.{.fn}"
-    )) %>%
+    )) |>
     tidyr::pivot_longer(
-      cols = dplyr::contains("."),
+      cols      = dplyr::contains("."),
       names_sep = "\\.",
       names_to  = c("Muuttuja", ".value")
     )
+
   if (isTRUE(lv)) {
-    taulukko <- taulukko %>%
+    taulukko <- taulukko |>
       dplyr::mutate(
         lv_alaraja = ka - 1.96 * kh / sqrt(n),
         lv_ylaraja = ka + 1.96 * kh / sqrt(n)
@@ -295,7 +296,7 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
       m3 / (stats::sd(x, na.rm = TRUE)^3)
     }
 
-    taulukko_vinous <- aineisto %>%
+    taulukko_vinous <- aineisto |>
       dplyr::summarise(dplyr::across(
         .cols = c(!!!rlang::quos(...)),
         .fns  = list(
@@ -303,9 +304,9 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
           hu = ~kurtosis(.x)
         ),
         .names = "{.col}.{.fn}"
-      )) %>%
+      )) |>
       tidyr::pivot_longer(
-        cols = dplyr::contains("."),
+        cols      = dplyr::contains("."),
         names_sep = "\\.",
         names_to  = c("Muuttuja", ".value")
       )
@@ -314,7 +315,7 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
   }
 
   if (isTRUE(vaihteluvali)) {
-    taulukko_vv <- aineisto %>%
+    taulukko_vv <- aineisto |>
       dplyr::summarise(dplyr::across(
         .cols = c(!!!rlang::quos(...)),
         .fns  = list(
@@ -322,9 +323,9 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
           maksimi = ~max(.x, na.rm = TRUE)
         ),
         .names = "{.col}.{.fn}"
-      )) %>%
+      )) |>
       tidyr::pivot_longer(
-        cols = dplyr::contains("."),
+        cols      = dplyr::contains("."),
         names_sep = "\\.",
         names_to  = c("Muuttuja", ".value")
       )
@@ -332,15 +333,13 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
     taulukko <- dplyr::left_join(taulukko, taulukko_vv, by = "Muuttuja")
   }
 
-  # 4) FORMAT for display (half-up + trailing zeros) — convert selected cols to character
-  if (exists("round_tidy_half_up")) {
-    fmt_cols <- intersect(c("ka", "kh", "lv_alaraja", "lv_ylaraja", "minimi", "maksimi"), names(taulukko))
-    for (cc in fmt_cols) {
-      taulukko[[cc]] <- round_tidy_half_up(taulukko[[cc]], digits = 3)
-    }
+  # Format for display (half-up + trailing zeros)
+  fmt_cols <- intersect(c("ka", "kh", "lv_alaraja", "lv_ylaraja", "minimi", "maksimi"), names(taulukko))
+  for (cc in fmt_cols) {
+    taulukko[[cc]] <- round_tidy_half_up(taulukko[[cc]], digits = 3)
   }
 
-  dplyr::rename_with(taulukko, ~vapply(.x, .tr, character(1), kieli = kieli))
+  dplyr::rename_with(taulukko, ~ vapply(.x, .tr, character(1), kieli = kieli))
 }
 
 #' @title Tehdään logistisen regression taulukko.
@@ -359,25 +358,24 @@ tee_log_regressiotaulukko <- function(malli, luottamustaso = 0.95, pyorista_est 
     stop("Ensimmäisen argumentin tulee olla logistisen regressioanalyysin (glm, family = binomial) tulosobjekti.")
   }
 
-  malli_summary <- broom::tidy(malli, conf.int = TRUE, conf.level = luottamustaso) %>%
-    mutate(
-      Muuttuja   = as.character(term),
-      SE          = round_tidy_half_up(std.error, pyorista_est),
-      z           = round_tidy_half_up(statistic, pyorista_est),
-      p           = sapply(p.value, p_coding, digits = pyorista_p),
-      Log_odds_LL = round_tidy_half_up(conf.low,  pyorista_est),
-      Log_odds_UL = round_tidy_half_up(conf.high, pyorista_est),
-      OR          = round_tidy_half_up(exp(estimate),   pyorista_est),
-      `OR LL`     = round_tidy_half_up(exp(conf.low),   pyorista_est),
-      `OR UL`     = round_tidy_half_up(exp(conf.high),  pyorista_est),
+  malli_summary <- broom::tidy(malli, conf.int = TRUE, conf.level = luottamustaso) |>
+    dplyr::mutate(
+      Muuttuja      = as.character(term),
+      SE            = round_tidy_half_up(std.error, pyorista_est),
+      z             = round_tidy_half_up(statistic, pyorista_est),
+      p             = sapply(p.value, p_coding, digits = pyorista_p),
+      Log_odds_LL   = round_tidy_half_up(conf.low,  pyorista_est),
+      Log_odds_UL   = round_tidy_half_up(conf.high, pyorista_est),
+      OR            = round_tidy_half_up(exp(estimate),  pyorista_est),
+      `OR LL`       = round_tidy_half_up(exp(conf.low),  pyorista_est),
+      `OR UL`       = round_tidy_half_up(exp(conf.high), pyorista_est),
       `Log odds CI` = paste0("[", Log_odds_LL, ", ", Log_odds_UL, "]"),
       `OR CI`       = paste0("[", `OR LL`, ", ", `OR UL`, "]")
-    ) %>%
-    select(Muuttuja, Vetosuhde = OR, `95% Luottamusvali` = `OR CI`, p) %>%
+    ) |>
+    dplyr::select(Muuttuja, Vetosuhde = OR, `95% Luottamusvali` = `OR CI`, p) |>
     dplyr::filter(Muuttuja != "(Intercept)")
 
-  malli_summary <- dplyr::rename_with(malli_summary, ~vapply(.x, .tr, character(1), kieli = kieli))
-  return(malli_summary)
+  dplyr::rename_with(malli_summary, ~ vapply(.x, .tr, character(1), kieli = kieli))
 }
 
 #' Yhteenvetoteksti: R^2, korjattu R^2 ja ΔR^2 merkitsevyys hierarkkisille lm-malleille
@@ -504,33 +502,35 @@ p_coding <- function(pval, digits = 3) {
   tibble::as_tibble(disp_trim, rownames = "Muuttuja")
 }
 
+#' Package-level translation table
+#' @keywords internal
+.translations <- list(
+  Muuttuja            = c(suomi = "Muuttuja",           eng = "Variable"),
+  ka                  = c(suomi = "ka",                 eng = "mean"),
+  kh                  = c(suomi = "kh",                 eng = "sd"),
+  lv_alaraja          = c(suomi = "lv_alaraja",         eng = "ci_lo"),
+  lv_ylaraja          = c(suomi = "lv_ylaraja",         eng = "ci_hi"),
+  vi                  = c(suomi = "vi",                 eng = "skew"),
+  hu                  = c(suomi = "hu",                 eng = "kurt"),
+  minimi              = c(suomi = "minimi",             eng = "min"),
+  maksimi             = c(suomi = "maksimi",            eng = "max"),
+  Luottamusvali       = c(suomi = "Luottamusvali",      eng = "CI"),
+  `95% Luottamusvali` = c(suomi = "95% Luottamusvali", eng = "95% CI"),
+  Vetosuhde           = c(suomi = "Vetosuhde",          eng = "OR"),
+  Selitettava         = c(suomi = "Selitettava",        eng = "Outcome"),
+  Kommunaliteetti     = c(suomi = "Kommunaliteetti",    eng = "Communality"),
+  Ominaisarvo         = c(suomi = "Ominaisarvo",        eng = "SS loadings"),
+  Selitysosuus        = c(suomi = "Selitysosuus",       eng = "Proportion Var"),
+  `R2, korjattu`      = c(suomi = "R2, korjattu",      eng = "R2, adjusted"),
+  Malli               = c(suomi = "Malli",             eng = "Model")
+)
+
 #' Internal translation helper
 #' @keywords internal
 .tr <- function(key, kieli = "suomi") {
-  translations <- list(
-    Muuttuja              = c(suomi = "Muuttuja",              eng = "Variable"),
-    ka                    = c(suomi = "ka",                   eng = "mean"),
-    kh                    = c(suomi = "kh",                   eng = "sd"),
-    lv_alaraja            = c(suomi = "lv_alaraja",           eng = "ci_lo"),
-    lv_ylaraja            = c(suomi = "lv_ylaraja",           eng = "ci_hi"),
-    vi                    = c(suomi = "vi",                   eng = "skew"),
-    hu                    = c(suomi = "hu",                   eng = "kurt"),
-    minimi                = c(suomi = "minimi",               eng = "min"),
-    maksimi               = c(suomi = "maksimi",              eng = "max"),
-    Luottamusvali         = c(suomi = "Luottamusvali",        eng = "CI"),
-    `95% Luottamusvali`   = c(suomi = "95% Luottamusvali",   eng = "95% CI"),
-    Vetosuhde             = c(suomi = "Vetosuhde",            eng = "OR"),
-    Selitettava           = c(suomi = "Selitettava",          eng = "Outcome"),
-    Kommunaliteetti       = c(suomi = "Kommunaliteetti",      eng = "Communality"),
-    Ominaisarvo           = c(suomi = "Ominaisarvo",          eng = "SS loadings"),
-    Selitysosuus          = c(suomi = "Selitysosuus",         eng = "Proportion Var"),
-    `R2, korjattu`        = c(suomi = "R2, korjattu",        eng = "R2, adjusted"),
-    Malli                 = c(suomi = "Malli",               eng = "Model")
-  )
-  t <- translations[[key]]
+  t <- .translations[[key]]
   if (is.null(t)) return(key)
-  lang <- if (kieli == "suomi") "suomi" else "eng"
-  unname(t[lang])
+  unname(t[if (kieli == "suomi") "suomi" else "eng"])
 }
 
 #' Half-up rounding with tidy trailing zeros
@@ -569,25 +569,28 @@ tee_yhdistelmataulukko <- function(..., kieli = "suomi") {
   taulukot <- list(...)
   if (length(taulukot) == 0) stop("Anna vähintään yksi taulukko.")
 
-  yhdistelty <- purrr::imap(taulukot, function(taulukko, i) {
-    otsikkorivi <- taulukko[1, ] %>%
-      dplyr::mutate(dplyr::across(dplyr::everything(), ~ NA)) %>%
-      dplyr::mutate(Muuttuja = paste0(.tr("Malli", kieli), " ", i))
+  purrr::imap(taulukot, function(taulukko, i) {
+    var_col <- names(taulukko)[1]
+    otsikkorivi <- taulukko[1, ] |>
+      dplyr::mutate(dplyr::across(dplyr::everything(), ~ NA)) |>
+      dplyr::mutate("{var_col}" := paste0(.tr("Malli", kieli), " ", i))
     dplyr::bind_rows(otsikkorivi, taulukko)
-  }) %>%
+  }) |>
     purrr::reduce(dplyr::bind_rows)
-
-  yhdistelty
 }
 
 
 utils::globalVariables(c(
   # common columns
-  "Muuttuja","ka","kh","n","lv_alaraja","lv_ylaraja","vi","hu",
-  # broom columns you use
-  "term","estimate","conf.low","conf.high","p.value","std.error","statistic",
-  # your computed/display columns
-  "Luottamusvali","Log_odds_LL","Log_odds_UL","OR","OR CI","OR LL","OR UL",
-  "B","Selitettava","value"
+  "Muuttuja", "ka", "kh", "n",
+  "lv_alaraja", "lv_ylaraja", "vi", "hu", "minimi", "maksimi",
+  # broom columns
+  "term", "estimate", "conf.low", "conf.high", "p.value", "std.error", "statistic",
+  # computed / display columns
+  "Luottamusvali", "Log_odds_LL", "Log_odds_UL",
+  "OR", "OR CI", "OR LL", "OR UL", "Log odds CI",
+  "B", "Selitettava", "value",
+  # translation table
+  ".translations"
 ))
 
