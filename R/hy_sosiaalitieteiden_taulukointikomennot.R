@@ -62,7 +62,7 @@ tee_faktorianalyysitaulukko <- function(faktorimalli, kieli="suomi", desimaalier
     filter(Muuttuja == "SS loadings" | Muuttuja == "Proportion Var")
 
   if(kieli=="suomi"){
-    taulukko2 <- taulukko2 %>% mutate(Muuttuja = fct_recode(Muuttuja, "Ominaisarvo" = "SS loadings", "Selitysosuus %" = "Proportion Var"))
+    taulukko2 <- taulukko2 %>% mutate(Muuttuja = fct_recode(Muuttuja, "Ominaisarvo" = "SS loadings", "Selitysosuus" = "Proportion Var"))
   }
 
   valmis_taulukko <- taulukko1 %>% bind_rows(taulukko2)
