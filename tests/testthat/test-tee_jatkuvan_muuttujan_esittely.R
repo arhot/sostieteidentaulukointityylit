@@ -3,6 +3,32 @@ test_that("tee_jatkuvan_muuttujan_esittely returns a tibble", {
   expect_s3_class(out, "tbl_df")
 })
 
+test_that("tee_jatkuvan_muuttujan_esittely stops on non-data.frame input", {
+  expect_error(tee_jatkuvan_muuttujan_esittely("not_a_df", x2),
+               "data frame")
+})
+
+test_that("tee_jatkuvan_muuttujan_esittely stops on factor variable", {
+  expect_error(
+    tee_jatkuvan_muuttujan_esittely(df_synth, cat),
+    "numeerisia"
+  )
+})
+
+test_that("tee_jatkuvan_muuttujan_esittely error names the offending column", {
+  expect_error(
+    tee_jatkuvan_muuttujan_esittely(df_synth, cat),
+    "cat"
+  )
+})
+
+test_that("tee_jatkuvan_muuttujan_esittely stops when any selected variable is non-numeric", {
+  expect_error(
+    tee_jatkuvan_muuttujan_esittely(df_synth, x2, cat),
+    "numeerisia"
+  )
+})
+
 test_that("tee_jatkuvan_muuttujan_esittely base columns exist (Finnish)", {
   out <- tee_jatkuvan_muuttujan_esittely(df_synth, x2, x3, kieli = "suomi")
   expect_true(all(c("Muuttuja", "n", "ka", "kh") %in% names(out)))

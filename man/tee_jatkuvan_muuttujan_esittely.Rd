@@ -18,7 +18,8 @@ tee_jatkuvan_muuttujan_esittely(
 \item{aineisto}{Data frame, josta muuttujat lasketaan.}
 
 \item{...}{Valittavat muuttujat (tukee tidyselect-apureita kuten \code{c()},
-\code{starts_with()}, \code{var1:var5}).}
+\code{starts_with()}, \code{var1:var5}). Kaikkien valittujen muuttujien
+tulee olla numeerisia; faktoreista ja merkkijonoista tulee selkeä virhe.}
 
 \item{lv}{Logical. Jos \code{TRUE}, lisää 95\% luottamusvälit keskiarvolle.
 Oletus \code{FALSE}.}

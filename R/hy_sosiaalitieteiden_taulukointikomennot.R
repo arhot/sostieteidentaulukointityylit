@@ -274,7 +274,8 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi", des
 #'
 #' @param aineisto Data frame, josta muuttujat lasketaan.
 #' @param ... Valittavat muuttujat (tukee tidyselect-apureita kuten \code{c()},
-#'   \code{starts_with()}, \code{var1:var5}).
+#'   \code{starts_with()}, \code{var1:var5}). Kaikkien valittujen muuttujien
+#'   tulee olla numeerisia; faktoreista ja merkkijonoista tulee selkeä virhe.
 #' @param lv Logical. Jos \code{TRUE}, lisää 95\% luottamusvälit keskiarvolle.
 #'   Oletus \code{FALSE}.
 #' @param vinous Logical. Jos \code{TRUE}, lisää vinouden (\code{vi}) ja
@@ -291,6 +292,25 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi", des
 
 
 tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE, kieli = "suomi", desimaalierotin = "piste") {
+
+  if (!is.data.frame(aineisto)) {
+    stop("Ensimmäisen argumentin tulee olla data frame.")
+  }
+
+  # Resolve selected columns and validate they are numeric
+  valitut <- tryCatch(
+    dplyr::select(aineisto, c(!!!rlang::quos(...))),
+    error = function(e) stop("Muuttujien valinta epäonnistui: ", conditionMessage(e), call. = FALSE)
+  )
+  ei_numeerisia <- names(valitut)[!vapply(valitut, is.numeric, logical(1))]
+  if (length(ei_numeerisia) > 0L) {
+    stop(
+      "Seuraavat muuttujat eivät ole numeerisia: ",
+      paste(ei_numeerisia, collapse = ", "),
+      ".\nFunktio laskee tunnuslukuja vain jatkuville (numeerisille) muuttujille.",
+      call. = FALSE
+    )
+  }
 
   taulukko <- aineisto |>
     dplyr::summarise(dplyr::across(
