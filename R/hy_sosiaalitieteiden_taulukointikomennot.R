@@ -59,11 +59,10 @@ tee_faktorianalyysitaulukko <- function(faktorimalli, kieli = "suomi", desimaali
       dplyr::across(dplyr::where(is.numeric), ~ round_tidy_half_up(.x, 2) |> format(nsmall = 2))
     ) |>
     dplyr::filter(Muuttuja == "SS loadings" | Muuttuja == "Proportion Var") |>
-    dplyr::mutate(Muuttuja = dplyr::case_match(
-      Muuttuja,
-      "SS loadings"    ~ .tr("Ominaisarvo",  kieli),
-      "Proportion Var" ~ .tr("Selitysosuus", kieli),
-      .default = Muuttuja
+    dplyr::mutate(Muuttuja = dplyr::case_when(
+      Muuttuja == "SS loadings"    ~ .tr("Ominaisarvo",  kieli),
+      Muuttuja == "Proportion Var" ~ .tr("Selitysosuus", kieli),
+      TRUE ~ Muuttuja
     ))
 
   valmis_taulukko <- dplyr::bind_rows(taulukko1, taulukko2)

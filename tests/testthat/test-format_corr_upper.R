@@ -13,25 +13,25 @@ test_that(".format_corr_upper has Muuttuja column from rownames", {
   expect_true("Muuttuja" %in% names(out))
 })
 
-test_that(".format_corr_upper dimensions: nrow = n-1, ncol = n (Muuttuja + (n-1) vars)", {
+test_that(".format_corr_upper dimensions: nrow = n-1, ncol = n (Muuttuja + (n-1) value cols)", {
   r <- as.matrix(corr_obj$r)
   p <- as.matrix(corr_obj$p)
   n <- nrow(r)   # 3 variables
   out <- sostieteidentaulukointityylit:::.format_corr_upper(r, p, digits = 2)
   expect_equal(nrow(out), n - 1L)
-  expect_equal(ncol(out), n)  # Muuttuja + (n-1) value columns
+  # Muuttuja column + (n-1) value columns = n total
+  expect_equal(ncol(out), n)
 })
 
 test_that(".format_corr_upper upper triangle: lower triangle + diagonal are NA", {
   r <- as.matrix(corr_obj$r)
   p <- as.matrix(corr_obj$p)
   out <- sostieteidentaulukointityylit:::.format_corr_upper(r, p, digits = 2)
-  # All non-Muuttuja cells in the lower-left should be NA
-  # The trimmed matrix is (n-1) rows x (n-1) cols (value cols only).
-  # The lower triangle of that sub-matrix should be all NA.
   val_mat <- as.matrix(out[, -1])
-  # lower.tri includes diagonal on the trimmed matrix
-  expect_true(all(is.na(val_mat[lower.tri(val_mat, diag = TRUE)])))
+  # In the trimmed (n-1) x (n-1) value matrix, original row i maps to original
+  # col i+1, so a cell is NA when original_row >= original_col, i.e. i > j in
+  # the trimmed matrix — that is the strict lower triangle (diag=FALSE).
+  expect_true(all(is.na(val_mat[lower.tri(val_mat, diag = FALSE)])))
 })
 
 test_that(".format_corr_upper adds stars for significant correlations", {

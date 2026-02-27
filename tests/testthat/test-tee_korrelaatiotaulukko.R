@@ -29,7 +29,8 @@ test_that("tee_korrelaatiotaulukko translates Muuttuja to Variable in English", 
 test_that("tee_korrelaatiotaulukko lower triangle cells are NA", {
   out <- tee_korrelaatiotaulukko(corr_obj)
   val_mat <- as.matrix(out[, -1])
-  expect_true(all(is.na(val_mat[lower.tri(val_mat, diag = TRUE)])))
+  # Strict lower triangle is NA (same trimming logic as .format_corr_upper)
+  expect_true(all(is.na(val_mat[lower.tri(val_mat, diag = FALSE)])))
 })
 
 test_that("tee_korrelaatiotaulukko dimension: n_vars - 1 rows", {

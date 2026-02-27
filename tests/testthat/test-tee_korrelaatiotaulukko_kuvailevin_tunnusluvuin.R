@@ -31,7 +31,9 @@ test_that("tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin translates descriptiv
 test_that("tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin row count matches n variables", {
   n_vars <- ncol(corr_obj$r)
   out <- tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin(corr_obj, corr_vars)
-  expect_equal(nrow(out), n_vars - 1L)  # trimmed like the plain correlation table
+  # left_join preserves all rows from stats_df (one per variable),
+  # so the output has n_vars rows (not trimmed like the plain correlation table)
+  expect_equal(nrow(out), n_vars)
 })
 
 test_that("tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin n column excludes NAs", {

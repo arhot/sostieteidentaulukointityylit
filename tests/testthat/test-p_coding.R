@@ -30,7 +30,10 @@ test_that("p_coding returns NA_character_ for NA input", {
 })
 
 test_that("p_coding respects digits argument", {
-  # digits = 2 should round 0.045 to "0.05" (or "0.04" depending on half-up)
+  # digits = 2: 0.046 rounds to 0.05 (half-up); result should have 2 decimal places
   result2 <- p_coding(0.046, digits = 2)
-  expect_equal(nchar(gsub("[^0-9]", "", result2)), 2L)
+  expect_equal(result2, "0.05")
+  # digits = 3 (default): 0.046 stays 0.046
+  result3 <- p_coding(0.046, digits = 3)
+  expect_equal(result3, "0.046")
 })

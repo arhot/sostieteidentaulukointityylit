@@ -1,5 +1,8 @@
 test_that("tee_regressiotaulukko_selitettava_rivina stops on non-lm input", {
-  expect_error(tee_regressiotaulukko_selitettava_rivina(glm_logit),
+  # glm inherits 'lm' in R, so test with a truly non-lm object
+  expect_error(tee_regressiotaulukko_selitettava_rivina(fa_model),
+               "regressioanalyysin tulosobjekti")
+  expect_error(tee_regressiotaulukko_selitettava_rivina("teksti"),
                "regressioanalyysin tulosobjekti")
 })
 
@@ -28,9 +31,7 @@ test_that("tee_regressiotaulukko_selitettava_rivina excludes intercept", {
 test_that("tee_regressiotaulukko_selitettava_rivina last row is R2 with NA CI and beta", {
   out <- tee_regressiotaulukko_selitettava_rivina(lm_simple, kieli = "suomi")
   last <- out[nrow(out), ]
-  # Muuttuja-like column (second non-Selitettava column should be Muuttuja)
-  muuttuja_col <- last[[names(last)[2]]]
-  expect_equal(muuttuja_col, "R2, korjattu")
+  expect_equal(last[["Muuttuja"]], "R2, korjattu")
   expect_true(is.na(last[["beta"]]))
   expect_true(is.na(last[["Luottamusvali"]]))
 })

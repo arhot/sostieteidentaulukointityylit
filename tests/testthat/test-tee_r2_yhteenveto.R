@@ -34,7 +34,8 @@ test_that("tee_r2_yhteenveto stops on empty list", {
 })
 
 test_that("tee_r2_yhteenveto stops on non-lm element", {
-  expect_error(tee_r2_yhteenveto(list(lm_simple, glm_logit)),
+  # glm inherits 'lm' in R, so use a truly non-lm object
+  expect_error(tee_r2_yhteenveto(list(lm_simple, fa_model)),
                "'lm'-objekteja")
 })
 

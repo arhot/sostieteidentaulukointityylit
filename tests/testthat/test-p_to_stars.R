@@ -11,9 +11,11 @@ test_that(".p_to_stars returns '*' for 0.01 <= p < 0.05", {
   expect_equal(as.character(sostieteidentaulukointityylit:::.p_to_stars(0.03)), "*")
 })
 
-test_that(".p_to_stars returns '' for p >= 0.05", {
-  expect_equal(as.character(sostieteidentaulukointityylit:::.p_to_stars(0.1)),  "")
-  expect_equal(as.character(sostieteidentaulukointityylit:::.p_to_stars(0.05)), "")
+test_that(".p_to_stars returns '' for p > 0.05", {
+  expect_equal(as.character(sostieteidentaulukointityylit:::.p_to_stars(0.1)),   "")
+  expect_equal(as.character(sostieteidentaulukointityylit:::.p_to_stars(0.051)), "")
+  # boundary: cut() uses (0.01, 0.05] so exactly 0.05 maps to "*"
+  expect_equal(as.character(sostieteidentaulukointityylit:::.p_to_stars(0.05)), "*")
 })
 
 test_that(".p_to_stars is vectorised", {

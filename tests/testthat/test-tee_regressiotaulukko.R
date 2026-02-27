@@ -1,5 +1,6 @@
 test_that("tee_regressiotaulukko stops on non-lm input", {
-  expect_error(tee_regressiotaulukko(glm_logit),
+  # glm inherits 'lm' in R, so test with a truly non-lm object
+  expect_error(tee_regressiotaulukko(fa_model),
                "regressioanalyysin tulosobjekti")
   expect_error(tee_regressiotaulukko("teksti"),
                "regressioanalyysin tulosobjekti")
