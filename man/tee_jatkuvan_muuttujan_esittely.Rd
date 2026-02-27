@@ -4,7 +4,15 @@
 \alias{tee_jatkuvan_muuttujan_esittely}
 \title{Esittele jatkuvia muuttujia}
 \usage{
-tee_jatkuvan_muuttujan_esittely(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE, kieli = "suomi")
+tee_jatkuvan_muuttujan_esittely(
+  aineisto,
+  ...,
+  lv = FALSE,
+  vinous = FALSE,
+  vaihteluvali = FALSE,
+  kieli = "suomi",
+  desimaalierotin = "piste"
+)
 }
 \arguments{
 \item{aineisto}{Data frame, josta muuttujat lasketaan.}
@@ -22,6 +30,8 @@ huipukkuuden (\code{hu}). Oletus \code{FALSE}.}
 maksimiarvo (\code{maksimi}). Oletus \code{FALSE}.}
 
 \item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
+
+\item{desimaalierotin}{Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.}
 }
 \value{
 Tibble, jossa sarakkeet: \code{Muuttuja}, \code{n}, \code{ka},

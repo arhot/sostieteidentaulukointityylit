@@ -51,3 +51,17 @@ test_that("tee_log_regressiotaulukko row count equals n predictors", {
 test_that("tee_log_regressiotaulukko pyorista_est and pyorista_p args accepted", {
   expect_no_error(tee_log_regressiotaulukko(glm_logit, pyorista_est = 3, pyorista_p = 2))
 })
+
+test_that("tee_log_regressiotaulukko desimaalierotin = 'pilkku' uses commas", {
+  out <- tee_log_regressiotaulukko(glm_logit, desimaalierotin = "pilkku")
+  char_cols <- out[, sapply(out, is.character)]
+  char_vals <- unlist(char_cols)
+  char_vals <- char_vals[!is.na(char_vals)]
+  expect_false(any(grepl("\\.", char_vals)))
+})
+
+test_that("tee_log_regressiotaulukko desimaalierotin = 'piste' keeps dots (default)", {
+  out <- tee_log_regressiotaulukko(glm_logit)
+  or_vals <- as.character(out[["Vetosuhde"]])
+  expect_false(any(grepl(",", or_vals)))
+})

@@ -4,12 +4,14 @@
 \alias{tee_regressiotaulukko}
 \title{Regressioanalyysin tulostaulukko}
 \usage{
-tee_regressiotaulukko(malli, kieli = "suomi")
+tee_regressiotaulukko(malli, kieli = "suomi", desimaalierotin = "piste")
 }
 \arguments{
 \item{malli}{Lineaarinen regressioanalyysimalli.}
 
 \item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
+
+\item{desimaalierotin}{Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.}
 }
 \value{
 Valmis regressioanalyysitaulukko.

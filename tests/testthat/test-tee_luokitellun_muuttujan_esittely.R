@@ -43,3 +43,19 @@ test_that("tee_luokitellun_muuttujan_esittely English translation works", {
   expect_true("%" %in% names(out))   # % is same in both languages
   expect_false("Muuttuja" %in% names(out))  # first col is variable name, not "Muuttuja"
 })
+
+test_that("tee_luokitellun_muuttujan_esittely desimaalierotin = 'pilkku' uses commas in %", {
+  # With 2 decimal places, the % column would contain dots e.g. "12.34%"
+  out <- tee_luokitellun_muuttujan_esittely(df_synth, cat,
+                                            desimaalipaikkoja = 2,
+                                            desimaalierotin = "pilkku")
+  pct_vals <- out[["\u0025"]]
+  expect_false(any(grepl("\\.", pct_vals)))
+  expect_true(any(grepl(",", pct_vals)))
+})
+
+test_that("tee_luokitellun_muuttujan_esittely desimaalierotin = 'piste' keeps dots (default)", {
+  out <- tee_luokitellun_muuttujan_esittely(df_synth, cat, desimaalipaikkoja = 2)
+  pct_vals <- out[["\u0025"]]
+  expect_false(any(grepl(",", pct_vals)))
+})

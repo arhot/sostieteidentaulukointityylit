@@ -4,7 +4,13 @@
 \alias{tee_luokitellun_muuttujan_esittely}
 \title{Esittele luokiteltua muuttujaa}
 \usage{
-tee_luokitellun_muuttujan_esittely(aineisto, muuttuja, desimaalipaikkoja = 2, kieli = "suomi")
+tee_luokitellun_muuttujan_esittely(
+  aineisto,
+  muuttuja,
+  desimaalipaikkoja = 2,
+  kieli = "suomi",
+  desimaalierotin = "piste"
+)
 }
 \arguments{
 \item{aineisto}{Data frame, josta muuttuja lasketaan.}
@@ -14,6 +20,8 @@ tee_luokitellun_muuttujan_esittely(aineisto, muuttuja, desimaalipaikkoja = 2, ki
 \item{desimaalipaikkoja}{Desimaalipaikat prosenttiluvuille (oletus 2).}
 
 \item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
+
+\item{desimaalierotin}{Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.}
 }
 \value{
 Tibble: muuttuja, \code{n}, \code{\%} ja tarvittaessa

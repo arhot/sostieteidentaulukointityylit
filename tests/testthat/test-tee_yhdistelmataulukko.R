@@ -46,3 +46,22 @@ test_that("tee_yhdistelmataulukko header rows have NA in all non-Muuttuja column
   other_cols <- header_row[, -1]
   expect_true(all(is.na(other_cols)))
 })
+
+test_that("tee_yhdistelmataulukko desimaalierotin = 'pilkku' uses commas", {
+  t1 <- tee_regressiotaulukko(lm_simple)
+  out <- tee_yhdistelmataulukko(t1, desimaalierotin = "pilkku")
+  char_cols <- out[, sapply(out, is.character)]
+  # exclude the label column (Muuttuja)
+  val_cols <- char_cols[, -1, drop = FALSE]
+  char_vals <- unlist(val_cols)
+  char_vals <- char_vals[!is.na(char_vals)]
+  expect_false(any(grepl("\\.", char_vals)))
+})
+
+test_that("tee_yhdistelmataulukko desimaalierotin = 'piste' keeps dots (default)", {
+  t1 <- tee_regressiotaulukko(lm_simple)
+  out <- tee_yhdistelmataulukko(t1)
+  b_vals <- out[["B"]]
+  b_vals <- b_vals[!is.na(b_vals)]
+  expect_false(any(grepl(",", b_vals)))
+})

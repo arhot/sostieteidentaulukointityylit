@@ -38,3 +38,18 @@ test_that("tee_korrelaatiotaulukko dimension: n_vars - 1 rows", {
   out <- tee_korrelaatiotaulukko(corr_obj)
   expect_equal(nrow(out), n_vars - 1L)
 })
+
+test_that("tee_korrelaatiotaulukko desimaalierotin = 'pilkku' uses commas", {
+  out <- tee_korrelaatiotaulukko(corr_obj, desimaalierotin = "pilkku")
+  char_vals <- unlist(out[, -1])
+  char_vals <- char_vals[!is.na(char_vals)]
+  expect_false(any(grepl("\\.", char_vals)))
+  expect_true(any(grepl(",", char_vals)))
+})
+
+test_that("tee_korrelaatiotaulukko desimaalierotin = 'piste' keeps dots (default)", {
+  out <- tee_korrelaatiotaulukko(corr_obj)
+  char_vals <- unlist(out[, -1])
+  char_vals <- char_vals[!is.na(char_vals)]
+  expect_false(any(grepl(",", char_vals)))
+})

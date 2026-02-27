@@ -4,12 +4,14 @@
 \alias{tee_yhdistelmataulukko}
 \title{Yhdistelmätaulukko useista regressiotaulukoista}
 \usage{
-tee_yhdistelmataulukko(..., kieli = "suomi")
+tee_yhdistelmataulukko(..., kieli = "suomi", desimaalierotin = "piste")
 }
 \arguments{
 \item{...}{Regressiotaulukot (data framet), jotka yhdistetään.}
 
 \item{kieli}{Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.}
+
+\item{desimaalierotin}{Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.}
 }
 \value{
 Yhdistetty taulukko otsikkoriveineen.

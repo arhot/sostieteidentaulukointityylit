@@ -34,6 +34,11 @@ test_that("tee_regressiotaulukko expected columns exist (Finnish)", {
   expect_true(all(c("Muuttuja", "B", "beta", "Luottamusvali", "p") %in% names(out)))
 })
 
+test_that("tee_regressiotaulukko beta column is character", {
+  out <- tee_regressiotaulukko(lm_simple)
+  expect_type(out[["beta"]], "character")
+})
+
 test_that("tee_regressiotaulukko row count: n_predictors + 1 R2 row", {
   # lm_multi has 2 predictors; intercept filtered; + 1 R2 row
   n_preds <- length(coef(lm_multi)) - 1L  # minus intercept
@@ -46,4 +51,23 @@ test_that("tee_regressiotaulukko Luottamusvali column has bracket format", {
   lv_vals <- out[["Luottamusvali"]]
   lv_vals <- lv_vals[!is.na(lv_vals)]
   expect_true(all(grepl("^\\[", lv_vals)))
+})
+
+test_that("tee_regressiotaulukko desimaalierotin = 'pilkku' uses commas", {
+  out <- tee_regressiotaulukko(lm_simple, desimaalierotin = "pilkku")
+  char_cols <- out[, sapply(out, is.character)]
+  char_vals <- unlist(char_cols)
+  char_vals <- char_vals[!is.na(char_vals)]
+  expect_false(any(grepl("\\.", char_vals)))
+  # beta specifically must use commas
+  beta_vals <- out[["beta"]]
+  beta_vals <- beta_vals[!is.na(beta_vals)]
+  expect_false(any(grepl("\\.", beta_vals)))
+})
+
+test_that("tee_regressiotaulukko desimaalierotin = 'piste' keeps dots (default)", {
+  out <- tee_regressiotaulukko(lm_simple)
+  b_vals <- out[["B"]]
+  b_vals <- b_vals[!is.na(b_vals)]
+  expect_false(any(grepl(",", b_vals)))
 })

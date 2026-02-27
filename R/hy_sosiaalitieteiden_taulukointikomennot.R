@@ -82,9 +82,10 @@ tee_faktorianalyysitaulukko <- function(faktorimalli, kieli = "suomi", desimaali
 #' p-arvot esitetty merkitsevyystähdillä.
 #' @param korrelaatiomatriisi psych::corr.test()-objekti tai lista, jossa komponentit r ja p.
 #' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
+#' @param desimaalierotin Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.
 #' @return Tibble: Muuttuja + yläkolmion korrelaatiot tähdillä.
 #' @export
-tee_korrelaatiotaulukko <- function(korrelaatiomatriisi, kieli = "suomi") {
+tee_korrelaatiotaulukko <- function(korrelaatiomatriisi, kieli = "suomi", desimaalierotin = "piste") {
   # validate
   if (is.null(korrelaatiomatriisi) || is.null(korrelaatiomatriisi$r) || is.null(korrelaatiomatriisi$p)) {
     stop("Ensimmäisen argumentin tulee olla psych::corr.test()-tulos (tai lista, jossa on komponentit r ja p).")
@@ -97,6 +98,11 @@ tee_korrelaatiotaulukko <- function(korrelaatiomatriisi, kieli = "suomi") {
   out <- .format_corr_upper(r_mat, p_mat, digits = 2)
   out <- dplyr::rename_with(out, ~vapply(.x, .tr, character(1), kieli = kieli))
 
+  if (desimaalierotin == "pilkku") {
+    out <- out |>
+      dplyr::mutate(dplyr::across(dplyr::where(is.character), ~ stringr::str_replace_all(.x, "\\.", ",")))
+  }
+
   return(out)
 }
 
@@ -108,9 +114,10 @@ tee_korrelaatiotaulukko <- function(korrelaatiomatriisi, kieli = "suomi") {
 #' @param korrelaatiomatriisi psych::corr.test()-objekti tai lista, jossa komponentit r ja p.
 #' @param aineisto data.frame, josta lasketaan n, ka ja kh. Sen tulee sisältää samat muuttujat kuin korrelaatiomatriisissa.
 #' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
+#' @param desimaalierotin Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.
 #' @return Tibble: Muuttuja, n, ka, kh + yläkolmion korrelaatiot tähdillä.
 #' @export
-tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi, aineisto, kieli = "suomi") {
+tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi, aineisto, kieli = "suomi", desimaalierotin = "piste") {
   # validate
   if (is.null(korrelaatiomatriisi) || is.null(korrelaatiomatriisi$r) || is.null(korrelaatiomatriisi$p)) {
     stop("Ensimmäisen argumentin tulee olla psych::corr.test()-tulos (tai lista, jossa on komponentit r ja p).")
@@ -140,8 +147,8 @@ tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi,
       names_sep = "\\."
     ) |>
     dplyr::mutate(
-      ka = janitor::round_half_up(ka, 2),
-      kh = janitor::round_half_up(kh, 2),
+      ka = round_tidy_half_up(ka, 2),
+      kh = round_tidy_half_up(kh, 2),
       Muuttuja = factor(Muuttuja, levels = vars)
     ) |>
     dplyr::arrange(Muuttuja) |>
@@ -151,6 +158,12 @@ tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi,
 
   out <- dplyr::left_join(stats_df, corr_tbl, by = "Muuttuja")
   out <- dplyr::rename_with(out, ~vapply(.x, .tr, character(1), kieli = kieli))
+
+  if (desimaalierotin == "pilkku") {
+    out <- out |>
+      dplyr::mutate(dplyr::across(dplyr::where(is.character), ~ stringr::str_replace_all(.x, "\\.", ",")))
+  }
+
   return(out)
 }
 
@@ -161,10 +174,11 @@ tee_korrelaatiotaulukko_kuvailevin_tunnusluvuin <- function(korrelaatiomatriisi,
 #' @description Funktio tekee lineaarisesta regressioanalyysimallista HY:n sosiaalitieteiden koulutusohjelmien ohjeiden mukaisen tulostaulukon.
 #' @param malli Lineaarinen regressioanalyysimalli.
 #' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
+#' @param desimaalierotin Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.
 #' @return Valmis regressioanalyysitaulukko.
 #' @export
 
-tee_regressiotaulukko <- function(malli, kieli = "suomi") {
+tee_regressiotaulukko <- function(malli, kieli = "suomi", desimaalierotin = "piste") {
   if (!inherits(malli, "lm")) {
     stop("Ensimmäisen argumentin tulee olla regressioanalyysin tulosobjekti.")
   }
@@ -176,7 +190,8 @@ tee_regressiotaulukko <- function(malli, kieli = "suomi") {
     dplyr::mutate(
       p = sapply(p, p_coding),
       Luottamusvali = paste("[", LV_alaraja, ",", LV_ylaraja, "]"),
-      B = round_tidy_half_up(B, 3)
+      B    = round_tidy_half_up(B, 3),
+      beta = round_tidy_half_up(beta, 3)
     ) |>
     dplyr::select(Muuttuja, B, beta, Luottamusvali, p) |>
     dplyr::filter(Muuttuja != "(Intercept)")
@@ -188,7 +203,14 @@ tee_regressiotaulukko <- function(malli, kieli = "suomi") {
     dplyr::mutate(Muuttuja = .tr("R2, korjattu", kieli))
 
   tulos <- dplyr::bind_rows(taulukko, selitysosuus)
-  dplyr::rename_with(tulos, ~ vapply(.x, .tr, character(1), kieli = kieli))
+  out <- dplyr::rename_with(tulos, ~ vapply(.x, .tr, character(1), kieli = kieli))
+
+  if (desimaalierotin == "pilkku") {
+    out <- out |>
+      dplyr::mutate(dplyr::across(dplyr::where(is.character), ~ stringr::str_replace_all(.x, "\\.", ",")))
+  }
+
+  out
 }
 
 
@@ -198,10 +220,11 @@ tee_regressiotaulukko <- function(malli, kieli = "suomi") {
 #' selitettävä muuttuja rivinä.
 #' @param malli Lineaarinen regressioanalyysimalli.
 #' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
+#' @param desimaalierotin Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.
 #' @return Valmis regressioanalyysitaulukko.
 #' @export
 
-tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi") {
+tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi", desimaalierotin = "piste") {
   if (!inherits(malli, "lm")) {
     stop("Ensimmäisen argumentin tulee olla regressioanalyysin tulosobjekti.")
   }
@@ -213,7 +236,7 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi") {
     dplyr::mutate(
       LV_alaraja    = round(conf.low, 3),
       LV_ylaraja    = round(conf.high, 3),
-      beta          = round(beta, 3),
+      beta          = round_tidy_half_up(beta, 3),
       p             = sapply(p.value, p_coding),
       B             = round_tidy_half_up(estimate, 3),
       Luottamusvali = paste0("[", LV_alaraja, ", ", LV_ylaraja, "]")
@@ -232,7 +255,14 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi") {
   )
 
   tulos <- dplyr::bind_rows(taulukko, selitysosuus)
-  dplyr::rename_with(tulos, ~ vapply(.x, .tr, character(1), kieli = kieli))
+  out <- dplyr::rename_with(tulos, ~ vapply(.x, .tr, character(1), kieli = kieli))
+
+  if (desimaalierotin == "pilkku") {
+    out <- out |>
+      dplyr::mutate(dplyr::across(dplyr::where(is.character), ~ stringr::str_replace_all(.x, "\\.", ",")))
+  }
+
+  out
 }
 
 
@@ -252,6 +282,7 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi") {
 #' @param vaihteluvali Logical. Jos \code{TRUE}, lisää minimi- (\code{minimi})
 #'   ja maksimiarvon (\code{maksimi}). Oletus \code{FALSE}.
 #' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
+#' @param desimaalierotin Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.
 #'
 #' @return Tibble, jossa sarakkeet: \code{Muuttuja}, \code{n}, \code{ka},
 #'   \code{kh}, sekä valinnaisesti \code{lv_alaraja}, \code{lv_ylaraja},
@@ -259,7 +290,7 @@ tee_regressiotaulukko_selitettava_rivina <- function(malli, kieli = "suomi") {
 #' @export
 
 
-tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE, kieli = "suomi") {
+tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = FALSE, vaihteluvali = FALSE, kieli = "suomi", desimaalierotin = "piste") {
 
   taulukko <- aineisto |>
     dplyr::summarise(dplyr::across(
@@ -333,12 +364,19 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
   }
 
   # Format for display (half-up + trailing zeros)
-  fmt_cols <- intersect(c("ka", "kh", "lv_alaraja", "lv_ylaraja", "minimi", "maksimi"), names(taulukko))
+  fmt_cols <- intersect(c("ka", "kh", "lv_alaraja", "lv_ylaraja", "vi", "hu", "minimi", "maksimi"), names(taulukko))
   for (cc in fmt_cols) {
     taulukko[[cc]] <- round_tidy_half_up(taulukko[[cc]], digits = 3)
   }
 
-  dplyr::rename_with(taulukko, ~ vapply(.x, .tr, character(1), kieli = kieli))
+  out <- dplyr::rename_with(taulukko, ~ vapply(.x, .tr, character(1), kieli = kieli))
+
+  if (desimaalierotin == "pilkku") {
+    out <- out |>
+      dplyr::mutate(dplyr::across(dplyr::where(is.character), ~ stringr::str_replace_all(.x, "\\.", ",")))
+  }
+
+  out
 }
 
 #' Esittele luokiteltu muuttuja
@@ -350,16 +388,24 @@ tee_jatkuvan_muuttujan_esittely <- function(aineisto, ..., lv = FALSE, vinous = 
 #' @param muuttuja Luokiteltava muuttuja (tidy eval -syntaksi).
 #' @param desimaalipaikkoja Desimaalipaikat prosenttiluvuille (oletus 2).
 #' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
+#' @param desimaalierotin Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.
 #'
 #' @return Tibble: muuttuja, \code{n}, \code{\%} ja tarvittaessa
 #'   \code{\% vastanneista} (kun aineistossa on puuttuvia havaintoja).
 #' @export
-tee_luokitellun_muuttujan_esittely <- function(aineisto, muuttuja, desimaalipaikkoja = 2, kieli = "suomi") {
-  aineisto |>
+tee_luokitellun_muuttujan_esittely <- function(aineisto, muuttuja, desimaalipaikkoja = 2, kieli = "suomi", desimaalierotin = "piste") {
+  out <- aineisto |>
     janitor::tabyl({{ muuttuja }}) |>
     janitor::adorn_pct_formatting(digits = desimaalipaikkoja) |>
     tibble::as_tibble() |>
     dplyr::rename_with(~ vapply(.x, .tr, character(1), kieli = kieli))
+
+  if (desimaalierotin == "pilkku") {
+    out <- out |>
+      dplyr::mutate(dplyr::across(dplyr::where(is.character), ~ stringr::str_replace_all(.x, "\\.", ",")))
+  }
+
+  out
 }
 
 #' @title Tehdään logistisen regression taulukko.
@@ -370,10 +416,11 @@ tee_luokitellun_muuttujan_esittely <- function(aineisto, muuttuja, desimaalipaik
 #' @param pyorista_est Desimaalit estimaateille, SE:lle ja z:lle (oletus 2).
 #' @param pyorista_p Desimaalit p-arvoille (oletus 3; käytetään \code{p_coding}).
 #' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
+#' @param desimaalierotin Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.
 #' @return Valmis esittelytaulukko.
 #' @export
 
-tee_log_regressiotaulukko <- function(malli, luottamustaso = 0.95, pyorista_est = 2, pyorista_p = 3, kieli = "suomi") {
+tee_log_regressiotaulukko <- function(malli, luottamustaso = 0.95, pyorista_est = 2, pyorista_p = 3, kieli = "suomi", desimaalierotin = "piste") {
   if (!inherits(malli, "glm") || is.null(malli$family) || malli$family$family != "binomial") {
     stop("Ensimmäisen argumentin tulee olla logistisen regressioanalyysin (glm, family = binomial) tulosobjekti.")
   }
@@ -395,7 +442,14 @@ tee_log_regressiotaulukko <- function(malli, luottamustaso = 0.95, pyorista_est 
     dplyr::select(Muuttuja, Vetosuhde = OR, `95% Luottamusvali` = `OR CI`, p) |>
     dplyr::filter(Muuttuja != "(Intercept)")
 
-  dplyr::rename_with(malli_summary, ~ vapply(.x, .tr, character(1), kieli = kieli))
+  out <- dplyr::rename_with(malli_summary, ~ vapply(.x, .tr, character(1), kieli = kieli))
+
+  if (desimaalierotin == "pilkku") {
+    out <- out |>
+      dplyr::mutate(dplyr::across(dplyr::where(is.character), ~ stringr::str_replace_all(.x, "\\.", ",")))
+  }
+
+  out
 }
 
 #' Yhteenvetoteksti: R^2, korjattu R^2 ja ΔR^2 merkitsevyys hierarkkisille lm-malleille
@@ -584,14 +638,15 @@ round_tidy_half_up <- function(x, digits = 3) {
 #'
 #' @param ... Regressiotaulukot (data framet), jotka yhdistetään.
 #' @param kieli Character. \code{"suomi"} (oletus) tai \code{"eng"} englanniksi.
+#' @param desimaalierotin Jos \code{"pilkku"}, muuttaa desimaalierottimen pilkuksi. Oletus \code{"piste"}.
 #' @return Yhdistetty taulukko otsikkoriveineen.
 #' @export
 
-tee_yhdistelmataulukko <- function(..., kieli = "suomi") {
+tee_yhdistelmataulukko <- function(..., kieli = "suomi", desimaalierotin = "piste") {
   taulukot <- list(...)
   if (length(taulukot) == 0) stop("Anna vähintään yksi taulukko.")
 
-  purrr::imap(taulukot, function(taulukko, i) {
+  out <- purrr::imap(taulukot, function(taulukko, i) {
     var_col <- names(taulukko)[1]
     otsikkorivi <- taulukko[1, ] |>
       dplyr::mutate(dplyr::across(dplyr::everything(), ~ NA)) |>
@@ -599,6 +654,13 @@ tee_yhdistelmataulukko <- function(..., kieli = "suomi") {
     dplyr::bind_rows(otsikkorivi, taulukko)
   }) |>
     purrr::reduce(dplyr::bind_rows)
+
+  if (desimaalierotin == "pilkku") {
+    out <- out |>
+      dplyr::mutate(dplyr::across(dplyr::where(is.character), ~ stringr::str_replace_all(.x, "\\.", ",")))
+  }
+
+  out
 }
 
 

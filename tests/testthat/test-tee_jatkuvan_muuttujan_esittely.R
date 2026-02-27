@@ -34,6 +34,12 @@ test_that("tee_jatkuvan_muuttujan_esittely vinous = TRUE adds vi and hu columns"
   expect_true(all(c("vi", "hu") %in% names(out)))
 })
 
+test_that("tee_jatkuvan_muuttujan_esittely vi and hu columns are character", {
+  out <- tee_jatkuvan_muuttujan_esittely(df_synth, x2, vinous = TRUE)
+  expect_type(out[["vi"]], "character")
+  expect_type(out[["hu"]], "character")
+})
+
 test_that("tee_jatkuvan_muuttujan_esittely vaihteluvali = TRUE adds minimi and maksimi", {
   out <- tee_jatkuvan_muuttujan_esittely(df_synth, x2, vaihteluvali = TRUE)
   expect_true(all(c("minimi", "maksimi") %in% names(out)))
@@ -48,4 +54,23 @@ test_that("tee_jatkuvan_muuttujan_esittely English translation works", {
 test_that("tee_jatkuvan_muuttujan_esittely CI columns translated in English", {
   out <- tee_jatkuvan_muuttujan_esittely(df_synth, x2, lv = TRUE, kieli = "eng")
   expect_true(all(c("ci_lo", "ci_hi") %in% names(out)))
+})
+
+test_that("tee_jatkuvan_muuttujan_esittely desimaalierotin = 'pilkku' uses commas", {
+  out <- tee_jatkuvan_muuttujan_esittely(df_synth, x2, x3,
+                                         vinous = TRUE, vaihteluvali = TRUE,
+                                         desimaalierotin = "pilkku")
+  char_cols <- out[, sapply(out, is.character)]
+  char_vals <- unlist(char_cols)
+  char_vals <- char_vals[!is.na(char_vals)]
+  expect_false(any(grepl("\\.", char_vals)))
+  # vi and hu specifically must use commas
+  expect_false(any(grepl("\\.", out[["vi"]])))
+  expect_false(any(grepl("\\.", out[["hu"]])))
+})
+
+test_that("tee_jatkuvan_muuttujan_esittely desimaalierotin = 'piste' keeps dots (default)", {
+  out <- tee_jatkuvan_muuttujan_esittely(df_synth, x2)
+  ka_vals <- out[["ka"]]
+  expect_false(any(grepl(",", ka_vals)))
 })
