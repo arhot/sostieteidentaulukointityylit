@@ -10,4 +10,7 @@ Encoding: UTF-8
 LazyData: true
 Imports: 
     dplyr, psych, forcats, janitor, broom, tibble, lm.beta, tidyselect, stats, rlang, stringr, tidyr, purrr
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
 RoxygenNote: 7.3.2
